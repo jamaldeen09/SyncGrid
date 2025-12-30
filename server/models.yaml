@@ -1,0 +1,169 @@
+---
+User:
+  type: object
+  properties:
+    _id: 
+      type: ObjectId
+
+    email:
+      type: string
+      required: true
+      lowercase: true
+      trim: true
+      regex: "/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/ - Must be a valid email address"
+
+    username:
+      type: string
+      required: true
+      trim: true
+      minLength: 1
+      maxLength: 39
+      regex: |
+       1. ^[a-zA-Z0-9-]+$ - Must only contain alphanumeric characters
+       2. ^(?!-) - Cannot begin with a hyphen
+       3. (?<!-)$ - Cannot end with a hyphen
+       4.	(?!.*--.*) - Cannot have consecutive hypens
+
+    profile_url:
+      type: string
+      default: "https://t4.ftcdn.net/jpg/07/03/86/11/360_F_703861114_7YxIPnoH8NfmbyEffOziaXy0EO1NpRHD.jpg"
+      trim: true
+      regex: "/(<([^>]+)>)/ - Must not contain HTML tags"
+
+    password_hash:
+      type: string
+      trim: true
+      required: true
+      minLength: 8
+      maxLength: 8
+      regex: |
+       1. /[^a-zA-Z0-9<>&;]/ - Must have at least 1 special character (excluding HTML tags)
+       2. (?=.*[a-z]) - Must have at least 1 lowercase character
+
+    current_win_streak:
+      type: number
+      default: 0
+
+    last_login:
+      type: date
+      default: "now"
+
+    created_at:
+      type: date
+      default: "now"
+
+    updated_at:
+      type: date
+      default: "now"
+
+Game:
+  type: object
+  properties:
+    _id: 
+      type: ObjectId
+
+    players:
+      type: array
+      items:
+        type: object
+        properties:
+          played_as: 
+            type: string
+            enum: ["X", "O"]
+            required: true
+            trim: true
+            uppercase: true
+
+          user_id:
+            type: ObjectId
+            ref: "User"
+            required: true
+            trim: true
+    
+      required: true
+      minLength: 2
+      maxLength: 2
+
+    moves:
+      type: array
+      items:
+        type: object
+        properties:
+          captured_at:
+            type: date
+            required: true
+
+          played_by:
+            type: ObjectId
+            ref: "User"
+            trim: true
+            required: true
+
+          location:
+            type: number
+            minLength: 0
+            maxLength: 9
+
+      
+      maxLength: 9
+      default: []
+
+    spectators:
+      type: array
+      items:
+        type: ObjectId
+        ref: "User"
+        required: true
+
+      maximumLength: 50
+      default: []
+
+    game_settings:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["private", "public"]
+          trim: true
+          required: true
+          lowercase: true
+
+        disable_comments:
+          type: boolean
+          default: true
+
+        time_setting_ms: 
+          type: number
+          required: true 
+      required: true
+
+Comment:
+  type: object
+  properties:
+    _id:
+      type: ObjectId
+
+    user_id:
+      type: ObjectId
+      ref: "User"
+      required: true
+      trim: true
+
+    content:
+      type: string
+      required: true
+      trim: true
+      minLength: 1
+      maxLength: 150
+      regex: "/(<([^>]+)>)/ - Must not contain HTML tags"
+
+    game_id:
+      type: ObjectId
+      ref: "Game"
+      trim: true
+      required: true
+
+    created_at:
+      type: Date
+      default: "now"
+...
