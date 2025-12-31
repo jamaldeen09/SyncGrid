@@ -11,7 +11,8 @@ import {
     FireIcon,
     UsersIcon,
     GameControllerIcon,
-    UsersThreeIcon
+    UsersThreeIcon,
+    MagnifyingGlassIcon
 } from "@phosphor-icons/react";
 import React from "react";
 import { ActionCard } from "@/components/reusable/ActionCard";
@@ -34,7 +35,7 @@ const MainPage = (): React.ReactElement => {
             gradient: "from-primary to-primary/70",
             buttonText: "Create",
             funcToExecuteOnButtonClick: () => {
-                dispatch(setTrigger({ key: "gameCreation", value: true })) 
+                dispatch(setTrigger({ key: "gameCreation", value: true }))
             }
         },
         {
@@ -53,9 +54,20 @@ const MainPage = (): React.ReactElement => {
             icon: <RobotIcon weight="fill" className="h-6 w-6" />,
             gradient: "from-purple-500 to-purple-600",
             buttonText: "Start",
-            funcToExecuteOnButtonClick: () => {},
+            funcToExecuteOnButtonClick: () => { },
+        },
+
+        {
+            id: 4,
+            title: "Find a public game",
+            description: "Quickly find someone to play against",
+            icon: <MagnifyingGlassIcon weight="fill" className="h-6 w-6" />,
+            gradient: "from-amber-500 to-orange-600",
+            buttonText: "Find",
+            funcToExecuteOnButtonClick: () => dispatch(setTrigger({ key: "playAsClarification", value: true }))
         }
-    ]
+    ];
+
     return (
         <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5 dark:from-background dark:via-background dark:to-primary/10 text-foreground">
             {/* ===== Navbar ===== */}
@@ -95,11 +107,11 @@ const MainPage = (): React.ReactElement => {
                             <p className="text-sm text-muted-foreground">Join ongoing matches in real-time</p>
                         </div>
                         <div className="flex items-center gap-4">
-                            <Button 
-                                variant="secondary" 
-                                size="sm" 
+                            <Button
+                                variant="secondary"
+                                size="sm"
                                 className="gap-2"
-                                // Add your onClick handler here for leaderboard modal/page
+                            // Add your onClick handler here for leaderboard modal/page
                             >
                                 <UsersThreeIcon className="h-4 w-4" />
                                 <span>Top Players</span>

@@ -1,11 +1,11 @@
+import { initRedis } from './config/redis.config.js';
+import { initDb } from './config/database.config.js';
+import { envData } from './config/env.config.js';
 import express, { Application } from "express"
 import http from "http"
-import { envData } from "../config/env.config.js";
-import { initDb } from "../config/database.config.js";
-import { initRedis } from "../config/redis.config.js";
-import { Server } from "socket.io";
-import { initSocket } from "../config/socket.config.js";
 import cors from "cors"
+import { Server } from 'socket.io';
+import { initSocket } from './config/socket.config.js';
 
 // Express app
 const app: Application = express();
@@ -21,7 +21,7 @@ app.use(cors({
 }));
 
 // Socket.io initialization (ws)
-
+  
 // Config
 const io = new Server(server, {
     cors: {
@@ -34,16 +34,17 @@ const io = new Server(server, {
 
 // initialization
 initSocket(io);
- 
+  
 // MongoDb initialization 
 await initDb();
-  
+   
 // Redis initialization;
 await initRedis();
 
 
-// ** Routesgit log --all --full-history -- "**/.env"
+// ** Routes
 
 // Listens for a port
-server.listen(envData.PORT, () => console.log(`Server is running on: ${envData.HOST_URL}`));
+server.listen(parseInt(envData.PORT), () => console.log(`Server is running on: ${envData.HOST_URL}`));
  
+

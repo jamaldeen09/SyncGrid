@@ -3,7 +3,7 @@ import socket from "@/lib/socket";
 import React, { useEffect, useRef } from "react";
 
 const SocketProvider = ({ children }: {
-    children: React.ReactNode
+  children: React.ReactNode
 }): React.ReactElement => {
   const { current } = useRef<boolean>(false) // Used to only attempt to connect once and preventing re renders
 
@@ -23,16 +23,24 @@ const SocketProvider = ({ children }: {
     socket.io.on("reconnect_error", (err) => console.error(`***** Reconnection error *****\n${err}`));
     socket.io.on("reconnect_failed", () => console.error("❌ Reconnection failed after all attemps"));
 
-    return () => {
-        // Clean up events when component unmounts to prevent lingering events from firing 
-        socket.off("connect");
-        socket.off("disconnect");
 
-        // ===== Reconnection ===== \\
-        socket.io.off("reconnect");
-        socket.io.off("reconnect_attempt");
-        socket.io.off("reconnect_error");
-        socket.io.off("reconnect_failed");
+    // ===== Matchmaking ===== \\
+    socket.emit("package", (val: string) => {
+      console.log("received web socket package: ", val)
+    });
+
+    return () => {
+      // Clean up events when component unmounts to prevent lingering events from firing 
+
+      // ===== Connection and disconnection ===== \\
+      socket.off("connect");
+      socket.off("disconnect");
+
+      // ===== Reconnection ===== \\
+      socket.io.off("reconnect");
+      socket.io.off("reconnect_attempt");
+      socket.io.off("reconnect_error");
+      socket.io.off("reconnect_failed");
     }
   }, []);
   return <>{children}</>

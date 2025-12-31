@@ -14,7 +14,7 @@ export const initDb = async () => {
             return;
         } catch (err) {
             retries++
-            console.log(`***** Mongo connection error *****\nError: ${err}`);
+            console.log(`***** Mongo connection error *****\n${err}`);
     
             if (retries < Infinity) {
                 console.log(`Retrying in ${delayMs / 1000}s`);

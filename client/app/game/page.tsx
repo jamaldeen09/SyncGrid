@@ -16,9 +16,9 @@ import {
   XIcon,
   CircleIcon,
   ShareNetworkIcon,
-  SkipForwardIcon,
   UserCircleIcon,
   PaperPlaneIcon,
+  GearIcon,
 } from "@phosphor-icons/react";
 
 const Game = (): React.ReactElement => {
@@ -64,11 +64,6 @@ const Game = (): React.ReactElement => {
     : board.every(square => square)
       ? "Draw!"
       : `Next player: ${isXNext ? "X" : "O"}`;
-
-  const resetGame = () => {
-    setBoard(Array(9).fill(null));
-    setIsXNext(true);
-  };
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
@@ -119,7 +114,7 @@ const Game = (): React.ReactElement => {
             <CircleIcon weight="bold" className="h-16 w-16" />
           </div>
         ) : (
-          <span className="text-muted-foreground/30 text-4xl">
+          <span className="text-muted-foreground/30 h-16 w-16">
             {index + 1}
           </span>
         )}
@@ -308,20 +303,12 @@ const Game = (): React.ReactElement => {
             </Card>
 
             {/* Game Controls */}
-            <div className="flex justify-center gap-4">
-              <Button
-                onClick={resetGame}
-                variant="outline"
-                className="gap-2"
-                disabled={moves === 0}
-              >
-                {/* <RotateCw className="h-4 w-4" /> */}
-                Reset Game
-              </Button>
+            <div className="flex items-center gap-4">
               <Button variant="outline" className="gap-2">
-                <SkipForwardIcon className="h-4 w-4" />
-                Skip Turn
+                <GearIcon />
+                Update game settings
               </Button>
+
               <Button className="gap-2 bg-linear-to-r from-primary to-primary/70">
                 <TrophyIcon className="h-4 w-4" />
                 Surrender

@@ -3,7 +3,6 @@ import dotenv from "dotenv"
 // Reads .env file
 dotenv.config();
 
-
 interface EnvData {
     REFRESH_TOKEN_SECRET: string;
     ACCESS_TOKEN_SECRET: string;

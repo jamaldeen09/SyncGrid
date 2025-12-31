@@ -14,6 +14,7 @@ export interface ModalProps {
     modalClassNames?: string;
     children?: React.ReactNode;
     triggerName: keyof Triggers;
+    animationDuration?: number;
 };
 
 
@@ -83,7 +84,7 @@ export const getAnimation = (animation: Animation, duration?: number): GetAnimat
 }
 
 
-export const ModalOverlay = ({ children: modalContent, className, shouldCloseOnClick, onClose }: {
+export const ModalOverlay = ({ children: modalContent, className, shouldCloseOnClick = true, onClose }: {
     children: React.ReactNode;
     className?: string;
     shouldCloseOnClick?: boolean;
@@ -110,21 +111,23 @@ export const ModalOverlay = ({ children: modalContent, className, shouldCloseOnC
 export const ModalContent = ({
     animation,
     children,
-    className
-}: { animation: Animation; children: React.ReactNode; className?: string; }) => {
+    className,
+    animationDuration,
+}: { animation: Animation; children: React.ReactNode; className?: string; animationDuration?: number }) => {
     const {
         initial,
         animate,
         exit,
         transition
-    } = getAnimation(animation);
+    } = getAnimation(animation, animationDuration);
     return (
         <motion.div
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
             initial={initial}
             animate={animate}
             exit={exit}
             transition={transition}
-            className={`max-w-xs sm:max-w-sm md:max-w-lg ring-foreground/10 bg-card text-card-foreground gap-4 overflow-hidden rounded-none py-4 text-xs/relaxed ring-1 w-full h-fit ${className}`}
+            className={`max-w-xs sm:max-w-sm md:max-w-lg ring-foreground/10 bg-card text-card-foreground gap-4 overflow-hidden rounded-none p-4 text-xs/relaxed ring-1 w-full h-fit ${className}`}
         >
             {children}
         </motion.div>
@@ -150,8 +153,8 @@ export const Modal = (props: ModalProps): React.ReactElement => {
     return (
         <AnimatePresence>
             {props.trigger && (
-                <ModalOverlay shouldCloseOnClick={props.closeOnOverlayClick || true} onClose={onClose} className={props.overlayClassNames}>
-                    <ModalContent className={props.modalClassNames} animation={props.animation}>
+                <ModalOverlay shouldCloseOnClick={props.closeOnOverlayClick} onClose={onClose} className={props.overlayClassNames}>
+                    <ModalContent animationDuration={props.animationDuration} className={props.modalClassNames} animation={props.animation}>
                         {props.children}
                     </ModalContent>
                 </ModalOverlay>

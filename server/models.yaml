@@ -84,12 +84,18 @@ Game:
       minLength: 2
       maxLength: 2
 
+    creator:
+      type: ObjectId
+      ref: "User"
+      trim: true
+      required: true
+        
     moves:
       type: array
       items:
         type: object
         properties:
-          captured_at:
+          played_at:
             type: date
             required: true
 
@@ -118,12 +124,20 @@ Game:
       maximumLength: 50
       default: []
 
+    cancelation_reason:
+      type: string
+      default: null
+
+    canceled_at:
+      type: date
+      default: null
+      
     game_settings:
       type: object
       properties:
         status:
           type: string
-          enum: ["private", "public"]
+          enum: ["private", "public", "canceled"]
           trim: true
           required: true
           lowercase: true

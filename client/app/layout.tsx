@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import ReduxProvider from "@/providers/ReduxProvider";
 import ModalsProvider from "@/providers/ModalsProvider";
 import SocketProvider from "@/providers/SocketProvider";
+import SonnerProvider from "@/providers/SonnerProvider";
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -37,11 +38,13 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <ReduxProvider>
-            <ModalsProvider>
-              <SocketProvider>
-                {children}
-              </SocketProvider>
-            </ModalsProvider>
+            <SocketProvider>
+              <ModalsProvider>
+                <SonnerProvider>
+                  {children}
+                </SonnerProvider>
+              </ModalsProvider>
+            </SocketProvider>
           </ReduxProvider>
         </ThemeProvider>
       </body>

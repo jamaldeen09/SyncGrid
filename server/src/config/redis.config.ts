@@ -78,12 +78,12 @@ export const initRedis = async () => {
 
         // ** Handle connection errors globally, not inside the retry loop ** \\
         redisClient.on("error", (err) => {
-            console.error(`***** Redis client error *****\nError: ${err}`);
+            console.error(`***** Redis client error *****\n${err}`);
         });
 
     } catch (err) {
         retries++
-        console.log(`***** Redis connection error *****\nError: ${err}`);
+        console.log(`***** Redis connection error *****\n${err}`);
         if (retries < Infinity) {
             console.log(`Retrying in ${delayMs / 1000}s`);
             new Promise((resolve) => setTimeout(resolve, delayMs))
