@@ -19,7 +19,7 @@ User:
       minLength: 1
       maxLength: 39
       regex: |
-       1. ^[a-zA-Z0-9-]+$ - Must only contain alphanumeric characters
+       1. ^[a-zA-Z0-9-]+$ - Must only contain letters, numbers, or hyphens
        2. ^(?!-) - Cannot begin with a hyphen
        3. (?<!-)$ - Cannot end with a hyphen
        4.	(?!.*--.*) - Cannot have consecutive hypens
@@ -28,17 +28,28 @@ User:
       type: string
       default: "https://t4.ftcdn.net/jpg/07/03/86/11/360_F_703861114_7YxIPnoH8NfmbyEffOziaXy0EO1NpRHD.jpg"
       trim: true
-      regex: "/(<([^>]+)>)/ - Must not contain HTML tags"
 
+    status:
+      type: string
+      enum: ["online", "offline"]
+      default: "offline"
+      trim: true
+      lowercase: true
+
+    token_version:
+      type: number
+      default: 1
+      
     password_hash:
       type: string
       trim: true
       required: true
       minLength: 8
-      maxLength: 8
+      maxLength: 30
       regex: |
        1. /[^a-zA-Z0-9<>&;]/ - Must have at least 1 special character (excluding HTML tags)
        2. (?=.*[a-z]) - Must have at least 1 lowercase character
+      #  3. /<[^>]*>/ - Cannot have html tags
 
     current_win_streak:
       type: number

@@ -8,6 +8,8 @@ export interface IUser {
     username: string;
     profile_url: string;
     current_win_streak: number;
+    status: "online" | "offline";
+    token_version: number;
     last_login: Date;
     created_at: Date;
     updated_at: Date;
@@ -32,10 +34,19 @@ const UserSchema = new Schema<IUserDocument, IUserModel>({
         type: String,
         required: true,
         trim: true,
-        match: [
-            /^(?=.*[a-z])(?=.*[^a-zA-Z0-9<>&;])[^<>&;]*$/,
-            "Password must pass these requirements:\n1. Must have at least 1 special character (excluding HTML tags)\n2. Must have at least 1 lowercase character"
-        ],
+    },
+
+    status: {
+        type: String,
+        enum: ["online", "offline"],
+        default: "offline",
+        lowercase: true,
+        trim: true,
+    },
+
+    token_version: {
+        type: Number,
+        default: 1
     },
 
     username: {
@@ -44,18 +55,14 @@ const UserSchema = new Schema<IUserDocument, IUserModel>({
         trim: true,
         match: [
             /^(?!-)[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/,
-            `Username must pass these requirements:\n1. Must only contain alphanumeric characters\n2. Cannot begin with a hyphen\n3. Cannot end with a hyphen\n4. Cannot have consecutive hypens`
+            `Username must pass these requirements:\n1. Must only contain letters, numbers, or hyphens\n2. Cannot begin with a hyphen\n3. Cannot end with a hyphen\n4. Cannot have consecutive hypens`
         ]
     },
 
     profile_url: {
         type: String,
-        required: true,
         trim: true,
-        match: [
-            /(<([^>]+)>)/,
-            "Profile url Must not contain HTML tags"
-        ],
+        default: "https://t4.ftcdn.net/jpg/07/03/86/11/360_F_703861114_7YxIPnoH8NfmbyEffOziaXy0EO1NpRHD.jpg",
     },
 
     current_win_streak: {

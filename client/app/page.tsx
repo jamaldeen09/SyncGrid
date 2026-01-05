@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
     RobotIcon,
-    PlusIcon,
     LightningIcon,
     ChartLineIcon,
     TrophyIcon,
@@ -14,16 +13,34 @@ import {
     UsersThreeIcon,
     MagnifyingGlassIcon
 } from "@phosphor-icons/react";
-import React from "react";
+import React, { useState } from "react";
 import { ActionCard } from "@/components/reusable/ActionCard";
 import { PublicGameCard, PublicGameCardProps } from "@/components/reusable/PublicGameCard";
 import Navbar from "@/components/main-page/Navbar";
 import { useAppDispatch } from "@/redux/store";
-import { setTrigger } from "@/redux/slices/triggers-slice";
+import { setBooleanTrigger } from "@/redux/slices/triggers-slice";
 
 
 const MainPage = (): React.ReactElement => {
     const dispatch = useAppDispatch();
+    const [userWaitingGames, setUserWaitingGames] = useState([
+        {
+            id: "game_123",
+            timeControl: 30000, // 30 seconds
+            visibility: "public",
+            yourRole: "X",
+            createdAt: Date.now() - 120000,
+            opponent: null
+        },
+        {
+            id: "game_456",
+            timeControl: 60000, // 1 minute
+            visibility: "private",
+            yourRole: "O",
+            createdAt: Date.now() - 60000,
+            opponent: null
+        }
+    ]);
 
     // Action cards
     const actionCards = [
@@ -35,7 +52,7 @@ const MainPage = (): React.ReactElement => {
             gradient: "from-primary to-primary/70",
             buttonText: "Create",
             funcToExecuteOnButtonClick: () => {
-                dispatch(setTrigger({ key: "gameCreation", value: true }))
+                dispatch(setBooleanTrigger({ key: "gameCreation", value: true }))
             }
         },
         {
@@ -64,18 +81,19 @@ const MainPage = (): React.ReactElement => {
             icon: <MagnifyingGlassIcon weight="fill" className="h-6 w-6" />,
             gradient: "from-amber-500 to-orange-600",
             buttonText: "Find",
-            funcToExecuteOnButtonClick: () => dispatch(setTrigger({ key: "playAsClarification", value: true }))
+            funcToExecuteOnButtonClick: () => dispatch(setBooleanTrigger({ key: "playAsClarification", value: true }))
         }
     ];
 
+    
     return (
         <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5 dark:from-background dark:via-background dark:to-primary/10 text-foreground">
             {/* ===== Navbar ===== */}
             <Navbar />
 
-            {/* ===== Main Content ===== */}
+            {/* ===== Main content ===== */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-                {/* ===== Hero Section ===== */}
+                {/* ===== Hero section ===== */}
                 <section className="text-center space-y-4">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
                         Play <span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">Tic-Tac-Toe</span> in Real-Time
@@ -85,7 +103,7 @@ const MainPage = (): React.ReactElement => {
                     </p>
                 </section>
 
-                {/* ===== Action Cards ===== */}
+                {/* ===== Action cards ===== */}
                 <section>
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold">Quick Actions</h2>
@@ -99,7 +117,7 @@ const MainPage = (): React.ReactElement => {
                     </div>
                 </section>
 
-                {/* PUBLIC GAMES */}
+                {/* ===== Public games ===== */}
                 <section>
                     <div className="flex items-center justify-between mb-6">
                         <div className="space-y-1">
@@ -108,17 +126,13 @@ const MainPage = (): React.ReactElement => {
                         </div>
                         <div className="flex items-center gap-4">
                             <Button
-                                variant="secondary"
+                                variant="outline"
                                 size="sm"
                                 className="gap-2"
                             // Add your onClick handler here for leaderboard modal/page
                             >
                                 <UsersThreeIcon className="h-4 w-4" />
                                 <span>Top Players</span>
-                            </Button>
-                            <Button size="sm" className="gap-2">
-                                <PlusIcon className="h-4 w-4" />
-                                <span>New Game</span>
                             </Button>
                         </div>
                     </div>

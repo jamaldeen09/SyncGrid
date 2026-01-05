@@ -2,16 +2,34 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { triggersSlice } from "./slices/triggers-slice";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { userSlice } from "./slices/user-slice";
+import { authApi } from "./apis/auth-api";
+import { profileApi } from "./apis/profile-api";
+import { gameApi } from "./apis/game-api";
+import { gameSlice } from "./slices/game-slice";
 
 
 // Redux store
 export const store = configureStore({
     // Reducer
     reducer: {
+        // Slice's
         triggers: triggersSlice.reducer,
+        user: userSlice.reducer,
+        game: gameSlice.reducer,
+
+        // Api's
+        [authApi.reducerPath]: authApi.reducer,
+        [profileApi.reducerPath]: profileApi.reducer,
+        [gameApi.reducerPath]: gameApi.reducer,
     },
 
-    // Api services
+    // Middlewares
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware()
+            .concat(authApi.middleware)
+            .concat(profileApi.middleware)
+            .concat(gameApi.middleware)
 });
 
 // Types for dispatch and selector to prevent issues when dispatching reducers or selecting states 
@@ -24,5 +42,5 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 
 
-
+ 
 

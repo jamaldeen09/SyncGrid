@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion"
-import { setTrigger, Triggers } from "@/redux/slices/triggers-slice";
+import { BooleanTriggers, setBooleanTrigger, Triggers } from "@/redux/slices/triggers-slice";
 import { useAppDispatch } from "@/redux/store";
 
 export type Animation = "scale-into-view" | "top-into-view" | "bottom-into-view" | "left-into-view" | "right-into-view"
@@ -13,7 +13,7 @@ export interface ModalProps {
     closeOnOverlayClick?: boolean;
     modalClassNames?: string;
     children?: React.ReactNode;
-    triggerName: keyof Triggers;
+    triggerName: keyof BooleanTriggers;
     animationDuration?: number;
 };
 
@@ -105,7 +105,7 @@ export const ModalOverlay = ({ children: modalContent, className, shouldCloseOnC
             {modalContent}
         </motion.div>
     )
-};
+}; 
 
 
 export const ModalContent = ({
@@ -149,7 +149,7 @@ export const Modal = (props: ModalProps): React.ReactElement => {
     }, [props.trigger]);
 
     // Closes the modal
-    const onClose = () => dispatch(setTrigger({ key: props.triggerName, value: false }));
+    const onClose = () => dispatch(setBooleanTrigger({ key: props.triggerName, value: false }));
     return (
         <AnimatePresence>
             {props.trigger && (

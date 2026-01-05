@@ -6,6 +6,8 @@ import ReduxProvider from "@/providers/ReduxProvider";
 import ModalsProvider from "@/providers/ModalsProvider";
 import SocketProvider from "@/providers/SocketProvider";
 import SonnerProvider from "@/providers/SonnerProvider";
+import AuthProvider from "@/providers/AuthProvider";
+import ProfileProvider from "@/providers/ProfileProvider";
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -41,7 +43,11 @@ export default function RootLayout({
             <SocketProvider>
               <ModalsProvider>
                 <SonnerProvider>
-                  {children}
+                  <AuthProvider>
+                    <ProfileProvider>
+                      {children}
+                    </ProfileProvider>
+                  </AuthProvider>
                 </SonnerProvider>
               </ModalsProvider>
             </SocketProvider>

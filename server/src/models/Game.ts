@@ -12,16 +12,20 @@ export interface IGame {
         captured_at: Date;
         played_by: mongoose.Schema.Types.ObjectId;
         value: "X" | "O" | null;
+        location: number;
     }[];
 
+
     game_settings: {
-        status: "private" | "public" | "canceled";
+        status: "matched" | "in_queue" | "finished" | "created";
+        visibility: "private" | "public" | "canceled";
         disabled_comments: boolean;
         time_setting_ms: number;
         cancelation_reason: string;
         canceled_at: Date;
     }
 };
+
 
 // this is going to be stored in db upon game creation = {
 //   players: ["user_that_clicked_create", "randomly_found_user (if public game)"],
@@ -132,6 +136,14 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
     game_settings: {
         status: {
             type: String,
+            enum: [],
+            lowercase: true,
+            trim: true,
+            required: true,
+        },
+
+        visibility: {
+            type: String,
             enum: ["private", "public", "canceled"],
             lowercase: true,
             trim: true,
@@ -149,7 +161,7 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
             default: null
         },
 
-        disable_comments: {
+        disabled_comments: {
             type: Boolean,
             default: true,
         },

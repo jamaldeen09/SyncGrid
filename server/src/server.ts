@@ -6,6 +6,9 @@ import http from "http"
 import cors from "cors"
 import { Server } from 'socket.io';
 import { initSocket } from './config/socket.config.js';
+import { authRouter } from './routes/auth.routes.js';
+import { profileRouter } from './routes/profile.routes.js';
+import { gameRouter } from './routes/game.routes.js';
 
 // Express app
 const app: Application = express();
@@ -42,7 +45,10 @@ await initDb();
 await initRedis();
 
 
-// ** Routes
+// Routes
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/profile", profileRouter);
+app.use("/api/v1", gameRouter);
 
 // Listens for a port
 server.listen(parseInt(envData.PORT), () => console.log(`Server is running on: ${envData.HOST_URL}`));
