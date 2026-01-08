@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from "react";
 import z from "zod"
 import { Controller, useForm } from "react-hook-form"
@@ -6,20 +7,20 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EnvelopeIcon, EyeIcon, EyeSlashIcon, LockIcon, UserIcon, XIcon } from "@phosphor-icons/react";
-import { useAppDispatch } from "@/redux/store";
-import { setAuthTrigger, setBooleanTrigger } from "@/redux/slices/triggers-slice";
 import { Spinner } from "@/components/ui/spinner";
-import useSignup from "@/hooks/useSignup";
-
+import useSignup from "@/hooks/auth/useSignup";
+import { useUi } from "@/contexts/UiContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 const Signup = (): React.ReactElement => {
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const dispatch = useAppDispatch();
-
+  const { openUi, closeUi } = useUi()
+  const { setAuth } = useAuth();
   const { extra, executeService, isLoading } = useSignup();
   const signupSchema = extra?.schema!;
   const validationErrors = extra?.validationErrors || [];
+
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // Signup form
   const signupForm = useForm<z.infer<typeof signupSchema>>({
@@ -38,7 +39,7 @@ const Signup = (): React.ReactElement => {
           <p className="text-muted-foreground text-sm hidden sm:block">Join the ultimate Tic-Tac-Toe multiplayer experience</p>
         </div>
 
-        <Button onClick={() => dispatch(setBooleanTrigger({ key: "auth", value: false }))} size="icon-lg" variant="outline" className="sm:hidden">
+        <Button onClick={() => closeUi("auth")} size="icon-lg" variant="outline" className="sm:hidden">
           <XIcon />
         </Button>
       </header>
@@ -147,7 +148,8 @@ const Signup = (): React.ReactElement => {
           <p
             onClick={() => {
               if (isLoading) return;
-              return dispatch(setAuthTrigger("login"))
+              openUi("auth")
+              setAuth("login")
             }}
             className={`w-fit text-xs text-muted-foreground transition-all duration-100 ${isLoading ? "opacity-70" : "hover:underline hover:text-primary cursor-pointer"}`}>
             Already have an account?

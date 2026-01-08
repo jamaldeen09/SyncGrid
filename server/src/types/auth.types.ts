@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ValidationError } from "express-validator";
 import jwt from "jsonwebtoken"
+import { IGame,} from "../models/Game";
 
 export interface AccessTokenPayload extends jwt.JwtPayload {
     userId: string;
@@ -18,6 +19,8 @@ export interface ConfiguredRequest extends Request {
     accessTokenPayload: AccessTokenPayload;
     refreshTokenPayload: RefreshTokenPayload;
     data: unknown;
+    game: IGame;
+    userId: string;
 }
 
 export interface ApiResponsePayload {

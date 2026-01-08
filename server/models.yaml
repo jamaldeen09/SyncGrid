@@ -125,16 +125,6 @@ Game:
       maxLength: 9
       default: []
 
-    spectators:
-      type: array
-      items:
-        type: ObjectId
-        ref: "User"
-        required: true
-
-      maximumLength: 50
-      default: []
-
     cancelation_reason:
       type: string
       default: null
@@ -142,16 +132,28 @@ Game:
     canceled_at:
       type: date
       default: null
+
+    duration_ms:
+      type: Number
+      default: 0
+
+    finished_at:
+      type: Date
+      default: null
       
     game_settings:
       type: object
       properties:
         status:
           type: string
-          enum: ["private", "public", "canceled"]
+          enum: ["canceled", "in_queue", "finished", "created", "matched"]
           trim: true
           required: true
           lowercase: true
+
+        visibility:
+          type: string
+          enum: ["private", "public"]
 
         disable_comments:
           type: boolean

@@ -1,6 +1,6 @@
 
 import { configureStore } from "@reduxjs/toolkit";
-import { triggersSlice } from "./slices/triggers-slice";
+// import { triggersSlice } from "./slices/triggers-slice";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { userSlice } from "./slices/user-slice";
 import { authApi } from "./apis/auth-api";
@@ -14,7 +14,7 @@ export const store = configureStore({
     // Reducer
     reducer: {
         // Slice's
-        triggers: triggersSlice.reducer,
+        // triggers: triggersSlice.reducer,
         user: userSlice.reducer,
         game: gameSlice.reducer,
 

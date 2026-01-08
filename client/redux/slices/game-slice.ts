@@ -1,15 +1,18 @@
+import { GameSettings } from '@/redux/apis/game-api';
 import { PaginationPayload } from "@/lib/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface GameSliceType {
     matchmakingGameId: string;
     gamesFetchResult: PaginationPayload | null;
+    gameBeingUpdated: (GameSettings & { gameId: string }) | null;
 }
 
 // Slice's initial state
 const initialState: GameSliceType = {
     matchmakingGameId: "",
     gamesFetchResult: null,
+    gameBeingUpdated: null,
 };
 
 
@@ -17,7 +20,7 @@ export const gameSlice = createSlice({
     name: "game",
     initialState,
     reducers: {
-        setMatchmakingGame: (state, action: PayloadAction<string>) => {
+        setMatchmakingGameId: (state, action: PayloadAction<string>) => {
             state.matchmakingGameId = action.payload
         },
 
@@ -36,15 +39,20 @@ export const gameSlice = createSlice({
             const uniqueArrayOfCreatedGames = Array.from(new Map(combinedData.map(item => [item._id, item])).values());
             const fetchResult = { ...action.payload, data: uniqueArrayOfCreatedGames }
             state.gamesFetchResult = fetchResult;
+        },
+
+        setGameBeingUpdated: (state, action: PayloadAction<GameSliceType["gameBeingUpdated"]>) => {
+            state.gameBeingUpdated = action.payload;
         }
     }
 });
 
 
 export const {
-    setMatchmakingGame,
+    setMatchmakingGameId,
     setInitialGamesFetchResult,
     setNextGamesFetchResult,
+    setGameBeingUpdated
 } = gameSlice.actions
 
 

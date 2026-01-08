@@ -1,11 +1,13 @@
-import { setBooleanTrigger } from "@/redux/slices/triggers-slice";
+
+import { UiContextType } from "@/contexts/UiContext";
 import { AppDispatch } from "@/redux/store";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 interface OnFoundGameSchema {
     gameId: string;
     router: AppRouterInstance;
-    dispatch: AppDispatch
+    dispatch: AppDispatch;
+    closeUi: UiContextType["closeUi"];
 }
 
 /**
@@ -14,9 +16,9 @@ interface OnFoundGameSchema {
  */
 export const onFoundGame = (data: OnFoundGameSchema) => {
     // Disable any lingering modals
-    data.dispatch(setBooleanTrigger({ key: "findingOpponent", value: false }));
-    data.dispatch(setBooleanTrigger({ key: "gameCreation", value: false }));
-    data.dispatch(setBooleanTrigger({ key: "playAsClarification", value: false }));
+    data.closeUi("findingOpponent");
+    data.closeUi("gameCreation");
+    data.closeUi("playAsClarification");
 
     // Attach game id to params and route the user
     data.router.push(`/game/${data.gameId}`);

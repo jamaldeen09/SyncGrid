@@ -15,16 +15,23 @@ export interface IGame {
         location: number;
     }[];
 
-
     game_settings: {
         status: "matched" | "in_queue" | "finished" | "created";
         visibility: "private" | "public" | "canceled";
         disabled_comments: boolean;
         time_setting_ms: number;
-        cancelation_reason: string;
-        canceled_at: Date;
-    }
+    };
+
+    duration_ms: number;
+    finished_at: Date;
+
+    cancelation_reason: string;
+    canceled_at: Date;
 };
+
+interface RawGame {
+
+}
 
 
 // this is going to be stored in db upon game creation = {
@@ -86,13 +93,14 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
                 trim: true,
                 uppercase: true,
             },
-    
+
             user_id: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "User",
                 required: true,
                 trim: true,
-            }
+            },
+            _id: false,
         }],
 
         minLength: 1,
@@ -126,7 +134,9 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
                 required: true,
                 minLength: 0,
                 maxLength: 9,
-            }
+            },
+
+            _id: false,
         }],
 
         maxLength: 9,
@@ -150,16 +160,6 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
             required: true
         },
 
-        // Cancelation 
-        cancelation_reason: {
-            type: String,
-            default: null
-        },
-        
-        canceled_at: {
-            type: Date,
-            default: null
-        },
 
         disabled_comments: {
             type: Boolean,
@@ -170,7 +170,28 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
             type: Number,
             required: true
         }
-    }
+    },
+
+    duration_ms: {
+        type: Number,
+        default: 0,
+    },
+
+    finished_at: {
+        type: Date,
+        default: null,
+    },
+
+    // Cancelation 
+    cancelation_reason: {
+        type: String,
+        default: null
+    },
+
+    canceled_at: {
+        type: Date,
+        default: null
+    },
 }, {
     timestamps: {
         createdAt: "created_at",

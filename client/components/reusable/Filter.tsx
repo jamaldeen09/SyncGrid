@@ -9,12 +9,10 @@ import {
 } from "@/components/ui/select"
 
 export interface Filters {
-    status?: "matched" | "in_queue" | "finished" | "created";
-    play_as?: "X" | "O";
+    played_as?: "X" | "O";
     disabled_comments?: boolean;
     visibility?: "private" | "public"
     time_setting_ms?: number
-    sort_order?: "newest_first" | "oldest_first"
     limit?: number;
 }
 
@@ -44,23 +42,9 @@ interface FilterProps {
 export const getSelects = (): SelectSchema[] => {
     return (
         [
-            // ===== Status select ===== \\
-            {
-                field: "status",
-                triggerClassNames: "w-full lg:w-32",
-                valuePlaceholder: "Status",
-                items: [
-                    { id: 1, value: "all", label: "All Statuses" },
-                    { id: 2, value: "created", label: "Created" },
-                    { id: 3, value: "in_queue", label: "In Queue" },
-                    { id: 4, value: "matched", label: "Matched" },
-                    { id: 5, value: "finished", label: "Finished" },
-                ]
-            },
-
             // ===== Played as select ===== \\
             {
-                field: "play_as",
+                field: "played_as",
                 triggerClassNames: "w-full lg:w-36",
                 valuePlaceholder: "Played As",
                 items: [
@@ -107,17 +91,6 @@ export const getSelects = (): SelectSchema[] => {
                     { id: 5, value: "180000", label: "3 minutes" }
                 ]
             },
-
-            {
-                field: "sort_order",
-                triggerClassNames: "w-full lg:w-36",
-                valuePlaceholder: "Sort order",
-                items: [
-                    { id: 1, value: "all", label: "Sort order" },
-                    { id: 2, value: "newest_first", label: "Newest first" },
-                    { id: 3, value: "oldest_first", label: "Oldest first" },
-                ]
-            },
         ]
     )
 }
@@ -155,10 +128,8 @@ const Filter = (props: FilterProps): React.ReactElement => {
         if (selectedValue === "all") delete newFilters[field];
         else if (field === "disabled_comments") newFilters.disabled_comments = selectedValue === "true";
         else if (field === "time_setting_ms") newFilters.time_setting_ms = parseInt(selectedValue);
-        else if (field === "status") newFilters.status = selectedValue as "matched" | "in_queue" | "finished" | "created";
-        else if (field === "play_as") newFilters.play_as = selectedValue as "X" | "O";
+        else if (field === "played_as") newFilters.played_as = selectedValue as "X" | "O";
         else if (field === "visibility") newFilters.visibility = selectedValue as "private" | "public";
-        else if (field === "sort_order") newFilters.sort_order = selectedValue as "newest_first" | "oldest_first"
 
         props.setFilters(newFilters);
         localStorage.setItem("filters", JSON.stringify(newFilters));

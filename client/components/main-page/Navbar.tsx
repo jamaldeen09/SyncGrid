@@ -1,10 +1,8 @@
 "use client"
 import React from "react";
 import Logo from "../reusable/Logo";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { useAppSelector } from "@/redux/store";
 import { Button } from "../ui/button";
-import { setAuthTrigger, setBooleanTrigger } from "@/redux/slices/triggers-slice";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,10 +14,21 @@ import {
 import { BellIcon, GameControllerIcon, SignOutIcon, UserIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import CustomAvatar from "../reusable/CustomAvatar";
 import Link from "next/link";
+import { useUi } from "@/contexts/UiContext";
+import { Auth, useAuth } from "@/contexts/AuthContext";
 
 const Navbar = (): React.ReactElement => {
-    const { auth: { isAuthenticated, username }, profile: { profile_url } } = useAppSelector((state) => state.user);
-    const dispatch = useAppDispatch()
+    const { openUi } = useUi();
+    const { setAuth } = useAuth();
+    const { 
+        auth: { isAuthenticated, username }, 
+        profile: { profile_url } 
+    } = useAppSelector((state) => state.user);
+
+    const enableAuthModal = (auth: Auth) => {
+        openUi("auth");
+        setAuth(auth);
+    }
     return (
         <nav className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/40">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,19 +114,13 @@ const Navbar = (): React.ReactElement => {
                     ) : (
                         <div className="flex items-center gap-4">
                             <Button
-                                onClick={() => {
-                                    dispatch(setAuthTrigger("login"));
-                                    dispatch(setBooleanTrigger({ key: "auth", value: true }))
-                                }}
+                                onClick={() => enableAuthModal("login")}
                                 variant="outline"
                             >
                                 Login
                             </Button>
                             <Button
-                                onClick={() => {
-                                    dispatch(setAuthTrigger("signup"));
-                                    dispatch(setBooleanTrigger({ key: "auth", value: true }))
-                                }}
+                                onClick={() => enableAuthModal("signup")}
                             >
                                 Signup
                             </Button>

@@ -1,8 +1,7 @@
 "use client"
 import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion"
-import { BooleanTriggers, setBooleanTrigger, Triggers } from "@/redux/slices/triggers-slice";
-import { useAppDispatch } from "@/redux/store";
+import { UiState, useUi } from "@/contexts/UiContext";
 
 export type Animation = "scale-into-view" | "top-into-view" | "bottom-into-view" | "left-into-view" | "right-into-view"
 
@@ -13,10 +12,9 @@ export interface ModalProps {
     closeOnOverlayClick?: boolean;
     modalClassNames?: string;
     children?: React.ReactNode;
-    triggerName: keyof BooleanTriggers;
+    triggerName: keyof UiState;
     animationDuration?: number;
 };
-
 
 export interface GetAnimationReturnType {
     initial: {
@@ -136,7 +134,8 @@ export const ModalContent = ({
 
 
 export const Modal = (props: ModalProps): React.ReactElement => {
-    const dispatch = useAppDispatch()
+    const { closeUi } = useUi();
+
     useEffect(() => {
         // Quit scrolling when trigger gets called
         if (props.trigger) document.body.style.overflow = "hidden"
@@ -149,11 +148,10 @@ export const Modal = (props: ModalProps): React.ReactElement => {
     }, [props.trigger]);
 
     // Closes the modal
-    const onClose = () => dispatch(setBooleanTrigger({ key: props.triggerName, value: false }));
     return (
         <AnimatePresence>
             {props.trigger && (
-                <ModalOverlay shouldCloseOnClick={props.closeOnOverlayClick} onClose={onClose} className={props.overlayClassNames}>
+                <ModalOverlay shouldCloseOnClick={props.closeOnOverlayClick} onClose={() => closeUi(props.triggerName)} className={props.overlayClassNames}>
                     <ModalContent animationDuration={props.animationDuration} className={props.modalClassNames} animation={props.animation}>
                         {props.children}
                     </ModalContent>

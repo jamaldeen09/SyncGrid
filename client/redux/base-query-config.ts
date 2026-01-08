@@ -1,7 +1,5 @@
-import { SerializedError } from "@reduxjs/toolkit";
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import z from "zod"
 
 export interface ApiResponse {
     success: boolean;
@@ -13,17 +11,6 @@ export interface ApiResponse {
         details?: unknown,
     };
 };
-
-export interface RtkQueryApiServiceType<T = unknown, ExtraType = unknown> {
-    executeService: unknown;
-    isFetching?: boolean;
-    isLoading: boolean;
-    isSuccess: boolean;
-    isError: boolean;
-    error: FetchBaseQueryError | SerializedError | undefined;
-    data?: ApiResponse;
-    extra?: ExtraType
-}
 
 export const baseQuery = fetchBaseQuery({
     baseUrl: "http://localhost:4080/api/v1",

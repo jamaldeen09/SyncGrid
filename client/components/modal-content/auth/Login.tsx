@@ -6,19 +6,20 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EnvelopeIcon, EyeIcon, EyeSlashIcon, LockIcon, XIcon } from "@phosphor-icons/react";
-import { useAppDispatch } from "@/redux/store";
-import { setAuthTrigger, setBooleanTrigger } from "@/redux/slices/triggers-slice";
 import { Spinner } from "@/components/ui/spinner";
-import useLogin from "@/hooks/useLogin";
-
+import useLogin from "@/hooks/auth/useLogin";
+import { useUi } from "@/contexts/UiContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 const Login = (): React.ReactElement => {
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const dispatch = useAppDispatch();
   const { isLoading, extra, executeService } = useLogin();
+  const { setAuth } = useAuth();
+  const { openUi, closeUi } = useUi()
   const validationErrors = extra?.validationErrors || [];
   const loginSchema = extra?.schema!
+
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -28,6 +29,7 @@ const Login = (): React.ReactElement => {
       password: ""
     }
   });
+
   return (
     <form id="login-form" className="w-full" onSubmit={loginForm.handleSubmit(executeService)}>
       <header className="flex sm:justify-center items-center sm:text-center justify-between">
@@ -36,7 +38,7 @@ const Login = (): React.ReactElement => {
           <p className="text-muted-foreground text-sm hidden sm:block">Login to continue your Tic-Tac-Toe journey</p>
         </div>
 
-        <Button onClick={() => dispatch(setBooleanTrigger({ key: "auth", value: false }))} size="icon-lg" variant="outline" className="sm:hidden">
+        <Button onClick={() => closeUi("auth")} size="icon-lg" variant="outline" className="sm:hidden">
           <XIcon />
         </Button>
       </header>
@@ -117,7 +119,7 @@ const Login = (): React.ReactElement => {
           <p
             onClick={() => {
               if (isLoading) return;
-              return dispatch(setAuthTrigger("signup"))
+              openUi("auth")
             }}
             className={`text-xs text-muted-foreground transition-all duration-100 ${isLoading ? "opacity-70" : "hover:underline hover:text-primary cursor-pointer"}`}>
             Forgot password?
@@ -134,7 +136,8 @@ const Login = (): React.ReactElement => {
           <p
             onClick={() => {
               if (isLoading) return;
-              return dispatch(setAuthTrigger("signup"))
+              openUi("auth")
+              setAuth("signup")
             }}
             className={`w-fit text-xs text-muted-foreground transition-all duration-100 ${isLoading ? "opacity-70" : "hover:underline hover:text-primary cursor-pointer"}`}>
             Don't have an account?

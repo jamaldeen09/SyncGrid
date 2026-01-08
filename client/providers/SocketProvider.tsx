@@ -1,7 +1,7 @@
 "use client"
+import { useUi } from "@/contexts/UiContext";
 import { onFoundGame } from "@/lib/event-handlers";
 import socket from "@/lib/socket";
-import { setBooleanTrigger } from "@/redux/slices/triggers-slice";
 import { useAppDispatch } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef } from "react";
@@ -11,7 +11,8 @@ const SocketProvider = ({ children }: {
 }): React.ReactElement => {
   const socketConnectionRef = useRef<boolean>(false) // Used to only attempt to connect once and preventing re renders
   const router = useRouter();
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
+  const { closeUi } = useUi();
 
   useEffect(() => {
     if (socketConnectionRef.current) return;
@@ -35,6 +36,7 @@ const SocketProvider = ({ children }: {
       gameId,
       router,
       dispatch,
+      closeUi,
     }));
 
     socketConnectionRef.current = true;
@@ -56,6 +58,7 @@ const SocketProvider = ({ children }: {
         gameId,
         router,
         dispatch,
+        closeUi,
       }));
     }
   }, []);

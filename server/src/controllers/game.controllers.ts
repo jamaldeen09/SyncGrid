@@ -1,11 +1,36 @@
 import { redisClient } from '../config/redis.config.js';
 import { Game } from '../models/Game.js';
-import { PaginationCredentials } from '../types/credentials.types.js';
-import { GameSettings, LiveGameSchema } from '../types/game.types.js';
-import { FormattedGame, PaginationPayload, RawGame } from '../types/payload.types.js';
+import { GameSettings, GameDataFilters } from '../types/game.types.js';
+import { FormattedGame, RawGame } from '../types/game.types.js';
+import { PaginationPayload } from '../types/payload.types.js';
 import { User } from './../models/User.js';
 import { ConfiguredRequest, ConfiguredResponse } from './../types/auth.types.js';
 import { Request } from "express";
+
+
+
+// Store the game state in redis
+// const liveGameData: LiveGameSchema = {
+//     _id: newGame._id,
+//     players: newGame.players.map((player) => {
+//         return {
+//             playing_as: player.played_as,
+//             user_id: player.user_id,
+//             time_left_ms: newGame.game_settings.time_setting_ms,
+//             time_left_till_deemed_unsuitable_for_match_ms: 20000,
+//             last_active: new Date()
+//         }
+//     }),
+//     status: newGame.game_settings.status,
+//     visibility: newGame.game_settings.visibility,
+//     moves: [],
+//     current_turn: "X",
+//     is_game_started: false,
+// };
+// // Store the live game in redis
+// const cacheKey = `live-game:${newGame._id}`;
+// await redisClient.set(cacheKey, 600, JSON.stringify(liveGameData));
+
 
 export const createGameController = async (req: Request, res: ConfiguredResponse) => {
     // Extract the user's id attached to request 
@@ -15,12 +40,12 @@ export const createGameController = async (req: Request, res: ConfiguredResponse
     try {
         const user = await User.exists({ _id: userId });
         if (!user)
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 message: "Account was not found",
                 error: {
                     code: "NOT_FOUND",
-                    statusCode: 400,
+                    statusCode: 404,
                 },
             });
 
@@ -33,7 +58,7 @@ export const createGameController = async (req: Request, res: ConfiguredResponse
                 }
             ],
             game_settings: {
-                status: "in_queue",
+                status: "created",
                 visibility: gameSettings.visibility,
                 disabled_comments: gameSettings.disabled_comments,
                 time_setting_ms: gameSettings.time_setting_ms,
@@ -43,8 +68,8 @@ export const createGameController = async (req: Request, res: ConfiguredResponse
         // Delete any paginated games pattern from redis
         const gameKeys = await redisClient.keys(`user:${user._id}-games*`);
         gameKeys.forEach(async (key) => {
-            try { 
-                await redisClient.del(key) 
+            try {
+                await redisClient.del(key)
             } catch (err) {
                 console.error(`***** Game creation error *****\nFile: game.controllers.ts\nController: createGameController\n${err}`);
                 return res.status(500).json({
@@ -57,35 +82,6 @@ export const createGameController = async (req: Request, res: ConfiguredResponse
                 })
             }
         });
-
-        // Store the game state in redis
-        const liveGameData: LiveGameSchema = {
-            _id: newGame._id,
-            players: newGame.players.map((player) => {
-                return {
-                    playing_as: player.played_as,
-                    user_id: player.user_id,
-                    time_left_ms: newGame.game_settings.time_setting_ms,
-                    time_left_till_deemed_unsuitable_for_match_ms: 20000,
-                    last_active: new Date()
-                }
-            }),
-            status: newGame.game_settings.status,
-            visibility: newGame.game_settings.visibility,
-            moves: [],
-            current_turn: "X",
-            is_game_started: false,
-        };
-
-        // Store the live game in redis
-        const cacheKey = `game:${newGame._id}`;
-        await redisClient.setEx(cacheKey, 600, JSON.stringify(liveGameData));
-
-        // Add the game to the matchmaking queue so other users can see it and join
-        await redisClient.zAdd("matchmaking:queue", {
-            value: `game:${newGame._id}`,
-            score: Date.now(),
-        })
 
         return res.status(201).json({
             success: true,
@@ -110,7 +106,7 @@ export const createGameController = async (req: Request, res: ConfiguredResponse
 
 export const getGamesController = async (req: Request, res: ConfiguredResponse) => {
     // Extract validated pagination values and user's id attached to request
-    const paginationData = (req as ConfiguredRequest).data as PaginationCredentials;
+    const paginationData = (req as ConfiguredRequest).data as GameDataFilters;
     const { userId } = (req as ConfiguredRequest).accessTokenPayload;
 
     // Make sure page and limit always exists
@@ -123,33 +119,20 @@ export const getGamesController = async (req: Request, res: ConfiguredResponse) 
     // Create a cache key, create a storage for db query
     let paginationPattern = `user:${userId}-games-page:${page}-limit:${limit}`;
     let databaseQuery: Record<any, any> = {}
-    let sortQuery: Record<any, any> = { created_at: -1 }
 
     if (paginationData.disabled_comments !== undefined) {
         databaseQuery["game_settings.disabled_comments"] = paginationData.disabled_comments;
         paginationPattern += `-disabledComments:${paginationData.disabled_comments}`;
     }
 
-    if (paginationData.status) {
-        databaseQuery["game_settings.status"] = paginationData.status;
-        paginationPattern += `-status:${paginationData.status}`;
-    }
-
-    if (paginationData.play_as) {
+    if (paginationData.played_as) {
         databaseQuery["players"] = {
             $elemMatch: {
                 user_id: userId,
-                played_as: paginationData.play_as
+                played_as: paginationData.played_as
             }
         };
-        paginationPattern += `-playAs:${paginationData.play_as}`;
-    }
-
-    if (paginationData.sort_order) {
-        if (paginationData.sort_order === "newest_first") sortQuery = { created_at: -1 }
-        if (paginationData.sort_order === "oldest_first") sortQuery = { created_at: 1 }
-
-        paginationPattern += `-sortOrder:${paginationData.sort_order}`
+        paginationPattern += `-playAs:${paginationData.played_as}`;
     }
 
     if (paginationData.visibility) {
@@ -165,7 +148,7 @@ export const getGamesController = async (req: Request, res: ConfiguredResponse) 
     try {
         // Check if the specific pattern exists in cache
         const cachedPaginationData = await redisClient.get(paginationPattern);
-        const totalGames = await Game.countDocuments({ 
+        const totalGames = await Game.countDocuments({
             creator: userId,
             ...databaseQuery
         });
@@ -175,28 +158,36 @@ export const getGamesController = async (req: Request, res: ConfiguredResponse) 
             // Check if the user exists in the database
             const user = await User.exists({ _id: userId });
             if (!user)
-                return res.status(400).json({
+                return res.status(404).json({
                     success: false,
                     message: "Account was not found",
                     error: {
                         code: "NOT_FOUND",
-                        statusCode: 400,
+                        statusCode: 404,
                     },
                 });
 
 
-            // Fetch the users games
+            // Fetch the games the user participated in (finished + created ONLY)
             const rawGames = await Game.find({
-                creator: user._id,
+                "players.user_id": userId,
+                "game_settings.status": {
+                    $in: ["finished", "created"]
+                },
                 ...databaseQuery
-            }).select("_id players game_settings")
+            }).select("_id players game_settings duration_ms finished_at moves")
                 .skip(offset)
                 .limit(limit)
-                .sort(sortQuery).populate({
-                    path: "players.user_id",
-                    select: "profile_url username _id",
-                }).lean<RawGame[]>();
-
+                .sort({ created_at: -1 }).populate([
+                    {
+                        path: "players.user_id",
+                        select: "profile_url username _id",
+                    },
+                    {
+                        path: "moves.played_by",
+                        select: "profile_url username _id"
+                    }
+                ]).lean<RawGame[]>();
 
             // Format the games
             const formattedGames: FormattedGame[] = rawGames.map((game) => {
@@ -209,21 +200,29 @@ export const getGamesController = async (req: Request, res: ConfiguredResponse) 
                         played_as: player.played_as
                     })),
 
-                    game_settings: {
-                        visibility: game.game_settings.visibility,
-                        status: game.game_settings.status,
-                        disabled_comments: game.game_settings.disabled_comments,
-                        time_setting_ms: game.game_settings.time_setting_ms,
-                    }
+                    moves: game.moves.map((move) => {
+                        const convertedId = move.played_by._id.toString();
+                        return {
+                            ...move,
+                            played_by: {
+                                ...move.played_by,
+                                _id: convertedId,
+                            }
+                        }
+                    }),
+
+                    game_settings: game.game_settings,
+                    duration_ms: game.duration_ms,
+                    finished_at: game.finished_at,
                 }
             });
-
 
             // Store the found games in redis
             const paginationData: PaginationPayload = {
                 page,
                 limit,
                 totalPages,
+                totalGames: formattedGames.length,
                 data: formattedGames,
             };
 
@@ -257,3 +256,63 @@ export const getGamesController = async (req: Request, res: ConfiguredResponse) 
     }
 };
 
+export const updateGameController = async (req: Request, res: ConfiguredResponse) => {
+    const gameBeingUpdated = (req as ConfiguredRequest).game
+    const userId = (req as ConfiguredRequest).userId;
+    const gameSettings = (req as ConfiguredRequest).data as GameSettings;
+
+    // Actual update data
+    let updateData: Record<any, any> = {};
+    try {
+        const isRequestingUserInGame = gameBeingUpdated.players.some((player) => player.user_id.toString() === userId);
+        if (!isRequestingUserInGame)
+            return res.status(403).json({
+                success: false,
+                message: `You are not a player in this game`,
+                error: {
+                    code: "FORBIDDEN",
+                    statusCode: 403,
+                }
+            });
+
+        // Conditionally add to update data
+        if (gameSettings.time_setting_ms) updateData = { ...updateData, time_settings_ms: gameSettings.time_setting_ms }
+        if (gameSettings.disabled_comments) updateData = { ...updateData, disabled_comments: gameSettings.disabled_comments }
+        if (gameSettings.visibility) updateData = { ...updateData, visibility: gameSettings.visibility }
+        if (gameSettings.play_as_preference) {
+            updateData.players = gameBeingUpdated.players.map((player) => {
+                if (player.user_id.toString() === userId) {
+                    return {
+                        ...player,
+                        played_as: gameSettings.play_as_preference
+                    }
+                }
+
+                return player
+            });
+        }
+
+        // Update only if update data was provided
+        if (Object.keys(updateData).length > 1) {
+            await Game.updateOne(
+                { _id: gameBeingUpdated },
+                { $set: updateData },
+            );
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Game updated successfully",
+        });
+    } catch (err) {
+        console.error(`***** Game update error *****\nFile: game.controllers.ts\nController: updateGameController\n${err}`);
+        return res.status(500).json({
+            success: true,
+            message: "A server error occured while trying to update your requested game, please try again shortly",
+            error: {
+                code: "SERVER_ERROR",
+                statusCode: 500,
+            }
+        })
+    }
+}

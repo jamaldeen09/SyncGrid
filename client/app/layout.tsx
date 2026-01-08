@@ -8,6 +8,9 @@ import SocketProvider from "@/providers/SocketProvider";
 import SonnerProvider from "@/providers/SonnerProvider";
 import AuthProvider from "@/providers/AuthProvider";
 import ProfileProvider from "@/providers/ProfileProvider";
+import { GameFetchContextProvider } from "@/contexts/GameFetchContext";
+import { UiContextProvider } from "@/contexts/UiContext";
+import { AuthContextProvider } from "@/contexts/AuthContext";
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -40,21 +43,26 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <ReduxProvider>
-            <SocketProvider>
-              <ModalsProvider>
-                <SonnerProvider>
-                  <AuthProvider>
-                    <ProfileProvider>
-                      {children}
-                    </ProfileProvider>
-                  </AuthProvider>
-                </SonnerProvider>
-              </ModalsProvider>
-            </SocketProvider>
+            <GameFetchContextProvider>
+              <UiContextProvider>
+                <AuthContextProvider>
+                  <SocketProvider>
+                    <ModalsProvider>
+                      <SonnerProvider>
+                        <AuthProvider>
+                          <ProfileProvider>
+                            {children}
+                          </ProfileProvider>
+                        </AuthProvider>
+                      </SonnerProvider>
+                    </ModalsProvider>
+                  </SocketProvider>
+                </AuthContextProvider>
+              </UiContextProvider>
+            </GameFetchContextProvider>
           </ReduxProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
-// SyncGrid_Database

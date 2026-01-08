@@ -10,6 +10,13 @@ export interface GameSettings {
     play_as_preference: "X" | "O"
 };
 
+export interface OptionalGameSettings {
+    visibility?: "private" | "public" | "canceled";
+    disabled_comments?: boolean;
+    time_setting_ms?: number;
+    play_as_preference?: "X" | "O"
+}
+
 // Service 
 export const gameApi = createApi({
     reducerPath: "gameApi",
@@ -36,11 +43,9 @@ export const gameApi = createApi({
 
                 // Add your filters as query parameters
                 if (body.filters.disabled_comments !== undefined) params.set("disabled_comments", body.filters.disabled_comments.toString());
-                if (body.filters.play_as) params.set("play_as", body.filters.play_as);
-                if (body.filters.status) params.set("status", body.filters.status);
+                if (body.filters.played_as) params.set("play_as_preference", body.filters.played_as);
                 if (body.filters.time_setting_ms) params.set("time_setting_ms", body.filters.time_setting_ms.toString());
-                if (body.filters.visibility) params.set("visibility", body.filters.visibility);
-                if (body.filters.sort_order) params.set("sort_order", body.filters.sort_order);
+                if (body.filters.visibility) params.set("visibility", body.filters.visibility)
 
 
                 // Pagination
@@ -51,10 +56,27 @@ export const gameApi = createApi({
             },
             keepUnusedDataFor: 0
         }),
+
+        deleteGame: builder.mutation<ApiResponse, { gameId: string }>({
+            query: (body) => ({
+                url: `/games/${body.gameId}`,
+                method: "DELETE"
+            })
+        }),
+
+        updateGame: builder.mutation<ApiResponse, (OptionalGameSettings & { gameId: string })>({
+            query: (body) => ({
+                url: `/games/${body.gameId}`,
+                method: "PATCH",
+                body,
+            })
+        })
     }),
 });
 
 export const {
     useCreateGameMutation,
     useLazyGetGamesQuery,
+    useDeleteGameMutation,
+    useUpdateGameMutation,
 } = gameApi;

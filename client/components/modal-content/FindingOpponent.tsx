@@ -3,19 +3,20 @@ import { Button } from "@/components/ui/button";
 import { HourglassIcon, UsersIcon, XIcon } from "@phosphor-icons/react";
 import socket from "@/lib/socket";
 import { callToast } from "@/providers/SonnerProvider";
-import { useAppDispatch, useAppSelector } from "@/redux/store";
+import {useAppSelector } from "@/redux/store";
 import { SocketResponse } from "@/lib/types";
-import { setBooleanTrigger } from "@/redux/slices/triggers-slice";
+import { useUi } from "@/contexts/UiContext";
 
 const FindingOpponent = () => {
     const searchStartTime = useRef<number>(Date.now());
-    const dispatch = useAppDispatch();
     const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
     const searchingForMatchRef = useRef<boolean>(false);
     const [isCancelingOpponentSearch, setIsCancelingOpponentSearch] = useState<boolean>(false);
 
-    // matchmakingGame
+    // Hooks
     const { matchmakingGameId } = useAppSelector((state) => state.game);
+    const { openUi } = useUi()
+
 
     // Timer effect
     useEffect(() => {
@@ -70,7 +71,7 @@ const FindingOpponent = () => {
                 return;
             }
 
-            dispatch(setBooleanTrigger({ key: "findingOpponent", value: false }));
+            openUi("findingOpponent")
         });
     };
     return (

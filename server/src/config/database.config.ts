@@ -29,6 +29,18 @@ export const initDb = async () => {
             // await deleteAllGames(); 
             // await Game.updateMany({}, { $set: { "game_settings.status": "created" } });
 
+            // await Game.findByIdAndUpdate("695e763827b356db00abb61a", {
+            //     $set: {
+            //         moves: [
+            //             {
+            //               played_at: new Date(),
+            //               played_by: "6956af858a2053db5c1b664d",
+            //               value: "X",
+            //               location: 0
+            //             }
+            //         ],
+            //     }
+            // })
             // await User.findOneAndUpdate({ username: "i-am-here" }, { $set: { password_hash: await bcrypt.hash("i-am-here-password", 12) } });
             return;
         } catch (err) { 

@@ -164,19 +164,19 @@ export const getSessionController = async (req: Request, res: ConfiguredResponse
         const cachedSession = await redisClient.get(cacheKey);
         if (!cachedSession) {
             // Check for the user's document
-            const user: IUserQuery = await User.findById(userId).lean<{
+            const user = await User.findById(userId).lean<{
                 _id: mongoose.Types.ObjectId;
                 username: string;
                 email: string;
             }>().select("_id username email");
 
             if (!user)
-                return res.status(400).json({
+                return res.status(404).json({
                     success: false,
                     message: "Account was not found",
                     error: {
                         code: "NOT_FOUND",
-                        statusCode: 400,
+                        statusCode: 404,
                     },
                 });
 
@@ -225,12 +225,12 @@ export const refreshController = async (req: Request, res: ConfiguredResponse) =
         }>().select("username email _id token_version");
         
         if (!user)
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 message: "Account was not found",
                 error: {
                     code: "NOT_FOUND",
-                    statusCode: 400,
+                    statusCode: 404,
                 },
             });
 
@@ -239,7 +239,7 @@ export const refreshController = async (req: Request, res: ConfiguredResponse) =
                 success: false,
                 message: "Unauthorized",
                 error: {
-                    code: "AUTHENTICATION_ERROR",
+                    code: "FORBIDDEN",
                     statusCode: 403
                 }
             });

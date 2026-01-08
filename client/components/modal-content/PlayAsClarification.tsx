@@ -3,20 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { XIcon, CircleIcon, CheckIcon, QuestionIcon } from "@phosphor-icons/react";
-import { useAppDispatch, useAppSelector } from "@/redux/store";
-import { setBooleanTrigger } from "@/redux/slices/triggers-slice";
 import socket from "@/lib/socket";
 import { callToast } from "@/providers/SonnerProvider";
 import { Spinner } from "../ui/spinner";
 import { SocketResponse } from "@/lib/types";
+import { useUi } from "@/contexts/UiContext";
 
 type PlayAsPreference = "X" | "O" | "any";
 
 const PlayAsClarification = (): React.ReactElement => {
     const [selectedPreference, setSelectedPreference] = useState<PlayAsPreference | null>(null);
-    const dispatch = useAppDispatch();
-    const { findingGame } = useAppSelector((state) => state.triggers.booleanTriggers)
-    const setIsFindingGame = (value: boolean) => dispatch(setBooleanTrigger({ key: "findingGame", value }))
+    const { ui, openUi, closeUi } = useUi()
 
     // Options
     const options = [
@@ -47,7 +44,7 @@ const PlayAsClarification = (): React.ReactElement => {
     ];
 
     //   Disables the modal this component is rendered on
-    const disableModal = () => dispatch(setBooleanTrigger({ key: "playAsClarification", value: false }))
+    const disableModal = () => closeUi("playAsClarification")
 
     const handleFindMatch = () => {
         // Handles cases whereby a user manages to click this button before a socket connection is established
@@ -62,7 +59,7 @@ const PlayAsClarification = (): React.ReactElement => {
             return;
         }
 
-        setIsFindingGame(true);
+        openUi("findingGame")
 
         // Emit an event via web socket 
         socket.emit("find_game", {
@@ -70,7 +67,7 @@ const PlayAsClarification = (): React.ReactElement => {
             playAsPreference: selectedPreference,
         }, (response: SocketResponse) => {
             const typedData = response.data as { gameId: string };
-            setIsFindingGame(false);
+            closeUi("findingGame")
 
             if (!response.success) {
                 callToast("error", response.message);
@@ -101,7 +98,7 @@ const PlayAsClarification = (): React.ReactElement => {
                 {options.map((option) => (
                     <Card
                         key={option.value}
-                        className={`p-4 cursor-pointer transition-all border ${findingGame && "opacity-70 pointer-events-none cursor-default"} ${selectedPreference === option.value
+                        className={`p-4 cursor-pointer transition-all border ${ui.findingGame && "opacity-70 pointer-events-none cursor-default"} ${selectedPreference === option.value
                             ? `${option.color} ring-2 ring-offset-2 ring-offset-background ${option.value === "X"
                                 ? "ring-red-500"
                                 : option.value === "O"
@@ -111,7 +108,7 @@ const PlayAsClarification = (): React.ReactElement => {
                             : "border-border hover:border-primary/30"
                             }`}
                         onClick={() => {
-                            if (findingGame) return;
+                            if (ui.findingGame) return;
                             return setSelectedPreference(option.value);
                         }}
                     >
@@ -175,11 +172,11 @@ const PlayAsClarification = (): React.ReactElement => {
             <div className="pt-2">
                 <Button
                     onClick={handleFindMatch}
-                    disabled={!selectedPreference || findingGame}
+                    disabled={!selectedPreference || ui.findingGame}
                     className="w-full gap-2 bg-linear-to-r from-primary to-primary/70"
                     size="lg"
                 >
-                    {findingGame ? (
+                    {ui.findingGame ? (
                         <>
                             <Spinner />
                             Searching for a match...
@@ -191,9 +188,9 @@ const PlayAsClarification = (): React.ReactElement => {
                     )}
                 </Button>
 
-                {findingGame && (
+                {ui.findingGame && (
                     <Button 
-                      onClick={() => setIsFindingGame(false)} 
+                      onClick={() => closeUi("findingGame")} 
                       variant="destructive" 
                       size="lg" 
                       className="w-full mt-3"

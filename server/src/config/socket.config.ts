@@ -87,7 +87,7 @@ class SocketService {
                 });
 
             // ===== Remove the found game from the matchmaking queue (indicating a match has been found) ===== \\
-            const foundGameKey = `game:${foundGame._id}`
+            const foundGameKey = `live-game:${foundGame._id}`
             await redisClient.zRem("matchmaking:queue", foundGameKey);
 
             return callback({
@@ -113,15 +113,15 @@ class SocketService {
     async cancelSearch(args: { gameId: string }, callback: SocketResponse) {
         try {
             // Remove the user's created game from the matchmaking queue
-            await redisClient.zRem("matchmaking:queue", `game:${args.gameId}`);
-            const rawGame = await redisClient.get(`game:${args.gameId}`);
+            await redisClient.zRem("matchmaking:queue", `live-game:${args.gameId}`);
+            const rawGame = await redisClient.get(`live-game:${args.gameId}`);
 
             // Update the game and set it again in redis
             if (rawGame) {
                 let game: LiveGameSchema = JSON.parse(rawGame);
                 game = { ...game, status: "created" }
 
-                await redisClient.set(`game:${game._id}`, JSON.stringify(game));
+                await redisClient.set(`live-game:${game._id}`, JSON.stringify(game));
             }
 
             callback({

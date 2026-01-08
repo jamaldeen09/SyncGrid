@@ -2,18 +2,123 @@
 import { ArrowLeftIcon, FunnelIcon, GameControllerIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import React, { Suspense } from "react";
 import { motion } from "framer-motion";
-import { AppDispatch, useAppDispatch, useAppSelector } from "@/redux/store";
-import { setBooleanTrigger } from "@/redux/slices/triggers-slice";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Filter, { Filters, getSelects } from "@/components/reusable/Filter";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { GameCard, GameCardSkeleton } from "@/components/reusable/GameCard";22
-import useGameFetchService from "@/hooks/useGameFetchService";
+import { HistoricalGameCardSkeleton, HistoricalGameCard } from "@/components/reusable/HistoricalGameCard";
+import { useGameFetch } from "@/contexts/GameFetchContext";
+import { UiContextType, useUi } from "@/contexts/UiContext";
+import { CurrentGameCard } from "@/components/reusable/CurrentGameCard";
+import { LiveGame } from "@/lib/types";
 
-const EmptyGames = ({ dispatch }: { dispatch: AppDispatch }) => {
+// Sample LiveGame data for testing
+export const sampleLiveGame: LiveGame = {
+  _id: "game_matched_001",
+  players: [
+    {
+      playing_as: "X",
+      user_id: "user_001",
+      time_left_ms: 35000, // 35 seconds left
+      time_left_till_deemed_unsuitable_for_match_ms: 15000, // 15 seconds before cancel
+      last_active: new Date(Date.now() - 5000), // 5 seconds ago
+      // username: "PlayerX",
+      // profile_url: "https://avatars.githubusercontent.com/u/1"
+    },
+    {
+      playing_as: "O",
+      user_id: "user_002",
+      time_left_ms: 45000, // 45 seconds left
+      time_left_till_deemed_unsuitable_for_match_ms: 20000, // 20 seconds before cancel
+      last_active: new Date(Date.now() - 3000), // 3 seconds ago
+      // username: "PlayerO",
+      // profile_url: "https://avatars.githubusercontent.com/u/2"
+    }
+  ],
+  status: "matched",
+  visibility: "public",
+  moves: [
+    {
+      captured_at: new Date(Date.now() - 60000),
+      played_by: {
+        user_id: "user_001",
+        username: "PlayerX",
+        profile_url: "https://avatars.githubusercontent.com/u/1"
+      },
+      value: "X",
+      location: 0
+    },
+    {
+      captured_at: new Date(Date.now() - 45000),
+      played_by: {
+        user_id: "user_002",
+        username: "PlayerO",
+        profile_url: "https://avatars.githubusercontent.com/u/2"
+      },
+      value: "O",
+      location: 4
+    },
+    {
+      captured_at: new Date(Date.now() - 30000),
+      played_by: {
+        user_id: "user_001",
+        username: "PlayerX",
+        profile_url: "https://avatars.githubusercontent.com/u/1"
+      },
+      value: "X",
+      location: 8
+    }
+  ],
+  current_turn: "O", // It's O's turn
+  is_game_started: true
+};
+
+// Sample in_queue game
+export const sampleQueuedGame: LiveGame = {
+  _id: "game_queued_001",
+  players: [
+    {
+      playing_as: "X",
+      user_id: "user_001",
+      time_left_ms: 0,
+      time_left_till_deemed_unsuitable_for_match_ms: 0,
+      last_active: new Date(),
+      // username: "WaitingPlayer",
+      // profile_url: "https://avatars.githubusercontent.com/u/1"
+    }
+  ],
+  status: "in_queue",
+  visibility: "public",
+  moves: [],
+  current_turn: "X",
+  is_game_started: false
+};
+
+// Sample created game
+export const sampleCreatedGame: LiveGame = {
+  _id: "game_created_001",
+  players: [
+    {
+      playing_as: "X",
+      user_id: "user_001",
+      time_left_ms: 0,
+      time_left_till_deemed_unsuitable_for_match_ms: 0,
+      last_active: new Date(),
+      // username: "Creator",
+      // profile_url: "https://avatars.githubusercontent.com/u/1"
+    }
+  ],
+  status: "created",
+  visibility: "private",
+  moves: [],
+  current_turn: "X",
+  is_game_started: false
+};
+
+const EmptyGames = ({ openUi }: { openUi: UiContextType["openUi"] }) => {
   return (
     <Card className="p-8 text-center border-dashed">
       <div className="space-y-4 max-w-sm mx-auto">
@@ -28,7 +133,7 @@ const EmptyGames = ({ dispatch }: { dispatch: AppDispatch }) => {
         </div>
         <div className="pt-2">
           <Button
-            onClick={() => dispatch(setBooleanTrigger({ key: "gameCreation", value: true }))}
+            onClick={() => openUi("gameCreation")}
             className="px-6"
           >
             <PlusIcon className="h-4 w-4 mr-2" />
@@ -87,7 +192,7 @@ const EmptyGamesWithFilters = ({ setFilters, filtersKeys }: {
 const GamesLoadingState = () => {
   return (
     Array.from({ length: 8 }).map((_, i: number) => {
-      return <GameCardSkeleton key={i} />
+      return <HistoricalGameCardSkeleton key={i} />
     })
   )
 };
@@ -96,6 +201,7 @@ const Games = () => {
   // Global state helpers
   const dispatch = useAppDispatch();
   const { gamesFetchResult } = useAppSelector((state) => state.game);
+  const { openUi } = useUi();
 
   // Custom hook to aid games fetch
   const {
@@ -103,7 +209,7 @@ const Games = () => {
     filters,
     setFilters,
     apiService: { isLoading, isFetching, seeMoreData, targetDivRef }
-  } = useGameFetchService();
+  } = useGameFetch();
 
   // Loading state + selects
   const isGettingGames = isLoading || isFetching;
@@ -115,24 +221,49 @@ const Games = () => {
   return (
     <div ref={targetDivRef} className="min-h-screen bg-linear-to-br from-background via-background to-primary/5 dark:from-background dark:via-background dark:to-primary/10 text-foreground">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        {/* ===== Header with filters ===== */}
+
+        {/* Go back button */}
+        <header>
+          <Link href="/">
+            <Button variant="outline" size="lg">
+              <ArrowLeftIcon /> Go back
+            </Button>
+          </Link>
+        </header>
+
+        {/* ===== CURRENT GAME SECTION ===== */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight">Your Created Games</h2>
+            <div className="space-y-2  text-center sm:text-start">
+              <h2 className="text-2xl font-bold tracking-tight">Current Game</h2>
               <p className="text-sm text-muted-foreground">
-                Games you created. Click "Search for an opponent" to start matchmaking
+                Your live match is in progress. Take your turn!
+                Waiting for opponent. Match will start soon.
               </p>
             </div>
-
-            <Link href="/">
-              <Button variant="outline" size="lg">
-                <ArrowLeftIcon /> Go back
-              </Button>
-            </Link>
           </div>
 
-          {/* ====== Filters Section ===== */}
+          {/* Current Game Card */}
+          <CurrentGameCard
+            game={sampleLiveGame}
+            currentUserId="kjtjt"
+          />
+        </div>
+
+        {/* ===== HISTORICAL GAMES SECTION ===== */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2 text-center sm:text-start">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Your Games
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Browse your completed matches and game history
+              </p>
+            </div>
+          </div>
+
+          {/* ====== Filters Section (for historical games only) ===== */}
           <div className="space-y-4">
             {/* Filter Card */}
             <Card className="p-4">
@@ -146,7 +277,7 @@ const Games = () => {
                     <div>
                       <h3 className="font-medium">Filters</h3>
                       <p className="text-xs text-muted-foreground">
-                        Refine your game list
+                        Refine your game history
                       </p>
                     </div>
                   </div>
@@ -178,8 +309,6 @@ const Games = () => {
                       />
                     </div>
                   ))}
-
-                  {/* Sort order */}
                 </div>
 
                 {/* ===== Active Filters ===== */}
@@ -212,19 +341,16 @@ const Games = () => {
                               <span className="font-medium">
                                 {
                                   key === "time_setting_ms" ? "Time setting" :
-                                    (key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()).replace('_', ' ')
+                                    key === "played_as" ? "Played as" :
+                                      (key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()).replace('_', ' ')
                                 }:
                               </span>
                               <span className="ml-1 font-normal">
                                 {typeof value === 'boolean'
                                   ? (value ? 'No' : 'Yes')
                                   : key === 'time_setting_ms'
-                                    ? `${Number(value) / 1000}s` :
-                                    key === "sort_order" ? (value.toString()).replace("_", " ").split(" ").map((val: string, i: number) => {
-                                      if (i === 0) return val.charAt(0).toUpperCase() + val.slice(1);
-                                      return val
-                                    }).join(" ")
-                                      : key === "status" && value === "in_queue" ? "In queue" : value
+                                    ? `${Number(value) / 1000}s`
+                                    : value
                                 }
                               </span>
 
@@ -249,7 +375,7 @@ const Games = () => {
           </div>
         </div>
 
-        {/* ===== Games Grid or Empty State ===== */}
+        {/* ===== Historical Games Grid or Empty State ===== */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <GamesLoadingState />
@@ -264,7 +390,7 @@ const Games = () => {
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
-                    onClick={() => dispatch(setBooleanTrigger({ key: "gameCreation", value: true }))}
+                    onClick={() => openUi("gameCreation")}
                     variant="outline"
                     size="sm"
                     className="h-8"
@@ -275,12 +401,16 @@ const Games = () => {
                 </div>
               </div>
 
-              {/* Games Grid */}
+              {/* Historical Games Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <Suspense fallback={<GamesLoadingState />}>
                   {isGettingGames ? (<GamesLoadingState />) : (
                     gamesFetchResult.data.map((game) => (
-                      <GameCard key={game._id} game={game} />
+                      <HistoricalGameCard
+                        key={game._id}
+                        game={game}
+                        dispatch={dispatch}
+                      />
                     ))
                   )}
                 </Suspense>
@@ -298,8 +428,8 @@ const Games = () => {
             </div>
           ) : filtersKeys.length > 0 && gamesFetchResult.data.length <= 0 ?
             (<EmptyGamesWithFilters filtersKeys={filtersKeys as unknown as Omit<keyof Filters, "page" | "limit">} setFilters={setFilters} />) :
-            (<EmptyGames dispatch={dispatch} />)
-        ) : (<EmptyGames dispatch={dispatch} />)}
+            (<EmptyGames openUi={openUi} />)
+        ) : (<EmptyGames openUi={openUi} />)}
       </div>
     </div>
   );

@@ -1,7 +1,4 @@
 import { ApiResponse } from "@/redux/base-query-config";
-import { SerializedError } from "@reduxjs/toolkit";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import React from "react";
 
 export interface ValidationError {
     field: string;
@@ -9,8 +6,8 @@ export interface ValidationError {
 }
 
 interface UseApiServiceHelperType {
-    extractValidationErrors: (error: FetchBaseQueryError | SerializedError | undefined) => ValidationError[];
-    extractErrorMessage:  (error: FetchBaseQueryError | SerializedError | undefined) => string;
+    extractValidationErrors: (error: unknown) => ValidationError[];
+    extractErrorMessage: (error: unknown) => string;
 }
 
 const useApiServiceHelper = (): UseApiServiceHelperType => {
@@ -19,16 +16,16 @@ const useApiServiceHelper = (): UseApiServiceHelperType => {
      * @param error 
      * @returns {ValidationError[]}
      */
-    const extractValidationErrors = (error: FetchBaseQueryError | SerializedError | undefined): ValidationError[] => {
-        if (!error || !("data" in error)) return [];
-        const typedErrorData = error.data as ApiResponse;
+    const extractValidationErrors = (error: unknown): ValidationError[] => {
+        if (error && typeof error === 'object' && 'data' in error) {
+            const errData = error.data as ApiResponse;
+            if (!errData.error) return [];
+            const validationErrs = errData.error?.details;
 
-        // Add a null check to confirm if the error object from the syncgrid's api
-        // exists
-        if (!typedErrorData.error) return [];
+            return (validationErrs as { validationErrors: ValidationError[] })?.validationErrors || []
+        }
 
-        const typedDetails = typedErrorData.error?.details as { validationErrors: ValidationError[] };
-        return typedDetails?.validationErrors
+        return [];
     }
 
     /**
@@ -36,10 +33,13 @@ const useApiServiceHelper = (): UseApiServiceHelperType => {
      * @param error 
      * @returns {string}
      */
-    const extractErrorMessage = (error: FetchBaseQueryError | SerializedError | undefined): string => {
-        if (!error || !("data" in error)) return "";
-        const typedErrorData = error.data as ApiResponse;
-        return typedErrorData.message
+    const extractErrorMessage = (error: unknown): string => {
+        if (error && typeof error === 'object' && 'data' in error) {
+            const errData = error.data as ApiResponse;
+            return errData.message || "An unexpected error occurred";
+        }
+
+        return "An unexpected error occured";
     }
 
     return {
