@@ -1,0 +1,168 @@
+---
+User:
+  type: object
+  properties:
+    _id: 
+      type: ObjectId
+
+    email:
+      type: string
+      required: true
+      lowercase: true
+      trim: true
+      regex: "/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/ - Must be a valid email address"
+
+    username:
+      type: string
+      required: true
+      trim: true
+      minLength: 1
+      maxLength: 39
+      regex: |
+       1. ^[a-zA-Z0-9-]+$ - Must only contain letters, numbers, or hyphens
+       2. ^(?!-) - Cannot begin with a hyphen
+       3. (?<!-)$ - Cannot end with a hyphen
+       4.	(?!.*--.*) - Cannot have consecutive hypens
+
+    profileUrl:
+      type: string
+      default: "https://t4.ftcdn.net/jpg/07/03/86/11/360_F_703861114_7YxIPnoH8NfmbyEffOziaXy0EO1NpRHD.jpg"
+      trim: true
+
+    tokenVersion:
+      type: number
+      default: 1
+      
+    passwordHash:
+      type: string
+      trim: true
+      required: true
+      minLength: 8
+      maxLength: 30
+      regex: |
+       1. /[^a-zA-Z0-9<>&;]/ - Must have at least 1 special character (excluding HTML tags)
+       2. (?=.*[a-z]) - Must have at least 1 lowercase character
+      #  3. /<[^>]*>/ - Cannot have html tags
+
+    currentWinStreak:
+      type: number
+      default: 0
+
+    lastLogin:
+      type: date
+      default: "now"
+
+    createdAt:
+      type: date
+      default: "now"
+
+    updatedAt:
+      type: date
+      default: "now"
+
+Game:
+  type: object
+  properties:
+    _id:
+      type: ObjectId
+
+    creator:
+      type: ObjectId
+      ref: "User"
+      required: true
+      trim: true
+
+    winner:
+      type: ObjectId
+      ref: "User"
+      default: null
+
+    players:
+      type: array
+      minLength: 1
+      maxLength: 2
+      items:
+        type: object
+        properties:
+          preference:
+            type: string
+            enum: ["X", "O"]
+            required: true
+            trim: true
+            uppercase: true
+          userId:
+            type: ObjectId
+            ref: "User"
+            required: true
+            trim: true
+
+    moves:
+      type: array
+      maxLength: 9
+      default: []
+      items:
+        type: object
+        properties:
+          playedAt:
+            type: date
+            required: true
+          playedBy:
+            type: ObjectId
+            ref: "User"
+            required: true
+            trim: true
+          value:
+            type: string
+            enum: ["X", "O"]
+            required: true
+            trim: true
+            uppercase: true
+          boardLocation:
+            type: number
+            required: true
+            minLength: 0
+            maxLength: 9
+
+    gameSettings:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["matched", "in_queue", "finished", "created"]
+          required: true
+          lowercase: true
+          trim: true
+        visibility:
+          type: string
+          enum: ["private", "public", "canceled"]
+          required: true
+          lowercase: true
+          trim: true
+        timeSettingMs:
+          type: number
+          required: true
+
+    durationMs:
+      type: number
+      default: 0
+
+    finishedAt:
+      type: date
+      default: null
+
+    cancelationReason:
+      type: string
+      default: null
+
+    canceledAt:
+      type: date
+      default: null
+
+    createdAt:
+      type: date
+      default: "now"
+
+    updatedAt:
+      type: date
+      default: "now"
+...
