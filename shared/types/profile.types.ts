@@ -3,5 +3,5 @@ export interface ProfileType {
     profileUrl: string;
     currentWinStreak: number;
     createdAt: string;
-    updatedAt: string;
+    username?: string;
 }; 

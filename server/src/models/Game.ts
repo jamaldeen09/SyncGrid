@@ -36,7 +36,7 @@ export interface IGame {
 
     // ===== Cancelation ===== \\
     cancelationReason: string;
-    canceledAt: Date;
+    canceledAt: Date; 
 
     // ===== Timestamps ===== \\
     createdAt: Date;

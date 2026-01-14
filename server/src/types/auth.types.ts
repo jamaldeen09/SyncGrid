@@ -23,10 +23,10 @@ export type LoginLean = {
     tokenVersion: number;
 
 
+    // ===== Profile ===== \\
     profileUrl: string;
     currentWinStreak: number 
     createdAt: Date 
-    updatedAt: Date
 } | null
 
 export type SessionLean = {

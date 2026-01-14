@@ -79,10 +79,10 @@ const Navbar = (): React.ReactElement => {
                             {/* ===== User Profile / Auth action buttons ===== */}
                             {isAuthenticated ? (
                                 <div className="flex items-center gap-4">
-                                    <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50">
+                                    {/* <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50">
                                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                                         <span className="text-sm">24 players online</span>
-                                    </div>
+                                    </div> */}
 
                                     {/* ==== Games ===== */}
                                     <Link href="/games" className="cursor-default">

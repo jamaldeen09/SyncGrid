@@ -11,3 +11,4 @@ export const events: EventType = {
 export * from "./types/auth.types";
 export * from "./types/profile.types";
 export * from "./types/socket.types"
+export * from "./types/game.types"

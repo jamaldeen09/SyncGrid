@@ -29,7 +29,7 @@ export class DatabaseService {
 
         if (args.optionConfig.optionType === "find") {
             if (args.optionConfig.option === "via-id") {
-                query = model.findById(args.query);
+                query = model.findById(args.id);
             } else if (args.optionConfig.option === "via-query") {
                 query = model.findOne(args.query);
             }
@@ -42,7 +42,7 @@ export class DatabaseService {
                 query.populate(args.populateOptions);
             }
 
-            return await query.lean<LeanGeneric>().exec();
+            return await query.lean<LeanGeneric>().exec()
         } else {
             const existsResult = await model.exists(args.query || {}).exec();
             return existsResult;

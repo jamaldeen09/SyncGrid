@@ -8,6 +8,12 @@ export const profileApi = createApi({
     endpoints: (builder) => ({
         getCurrentUserProfile: builder.query<ApiResponse, void>({
             query: () => "/profile/me"
+        }),
+
+        getOtherUserProfile: builder.query<ApiResponse, {
+            userId: string
+        }>({
+            query: ({ userId }) => `/profile/${userId}`
         })
     })
 });
@@ -15,6 +21,7 @@ export const profileApi = createApi({
 
 export const {
     useGetCurrentUserProfileQuery,
+    useGetOtherUserProfileQuery,
 } = profileApi
 
 

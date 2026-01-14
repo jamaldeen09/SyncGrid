@@ -49,7 +49,6 @@ export const signupController = async (req: Request, res: ConfiguredResponse) =>
             profileUrl: newUser.profileUrl,
             currentWinStreak: newUser.currentWinStreak,
             createdAt: newUser.createdAt.toISOString(),
-            updatedAt: newUser.updatedAt.toISOString(),
         };
 
         // Session data
@@ -70,7 +69,10 @@ export const signupController = async (req: Request, res: ConfiguredResponse) =>
         });
 
         // Cache profile data for 5 minutes
-        await redisService.writeOperation<ProfileType>(`profile-${newUser._id}`, profileData, 300);
+        await redisService.writeOperation<ProfileType>(`profile-${newUser._id}`, {
+            ...profileData,
+            username: newUser.username
+        }, 300);
 
         return res.status(201).json({
             success: true,
@@ -92,19 +94,19 @@ export const loginController = async (req: Request, res: ConfiguredResponse) => 
     // Extract validated login credentials attached to request
     const loginCredentials = (req as ConfiguredRequest).data as LoginCredentials;
     const loginErrObj = {
-        success: false,
+        success: false, 
         message: "Invalid login credentials",
         error: {
             code: "LOGIN_ERROR",
             statusCode: 401,
         }
-    }
+    } 
     try {
         const user = await userService.getSingleOrBulkUser<LoginLean>({
             result: "single",
             optionConfig: { optionType: "find", option: "via-query" },
             query: { email: loginCredentials.email },
-            selectFields: "passwordHash username email tokenVersion profileUrl currentWinStreak createdAt updatedAt",
+            selectFields: "passwordHash username email tokenVersion profileUrl currentWinStreak createdAt",
         }) as LoginLean;
 
         // Check if the user's document exists in the database
@@ -137,7 +139,6 @@ export const loginController = async (req: Request, res: ConfiguredResponse) => 
             profileUrl: user.profileUrl,
             currentWinStreak: user.currentWinStreak,
             createdAt: user.createdAt.toISOString(),
-            updatedAt: user.updatedAt.toISOString(),
         };
 
         // Cache session for 30 minutes
@@ -150,7 +151,10 @@ export const loginController = async (req: Request, res: ConfiguredResponse) => 
         });
 
         // Cache profile data for 5 minutes
-        await redisService.writeOperation<ProfileType>(`profile-${user._id}`, profileData, 300);
+        await redisService.writeOperation<ProfileType>(`profile-${user._id}`, {
+            ...profileData,
+            username: user.username
+        }, 300);
 
         return res.status(200).json({
             success: true,

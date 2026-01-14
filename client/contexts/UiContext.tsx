@@ -4,11 +4,13 @@ import { createContext, useContext, useReducer, ReactNode } from "react";
 // Ui state type
 export interface UiState {
     auth: boolean;
+    createGame: boolean;
 }
 
 // Ui state's initial state
 const initialState: UiState = {
     auth: false,
+    createGame: false,
 };
 
 // Types for Actions
