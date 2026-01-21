@@ -1,23 +1,34 @@
 import express from "express"
-import { processValidationMiddleware, verifyAccessTokenMiddleware } from "../middlewares/auth.middlewares.js";
-import { getProfileController } from "../controllers/profile.controllers.js";
-import { validateId } from "../lib/validations/id.validation.js";
+import { checkUsernameAvailabilityMiddleware, processValidationMiddleware, verifyAccessTokenMiddleware } from "../middlewares/auth.middlewares.js";
+import { editProfileController, getProfileController, getRequestingUserProfileController } from "../controllers/profile.controllers.js";
+import { editProfileValidation, getProfileValidation } from "../lib/validations/profile.validations.js";
+import { parseFormData, profilePictureUpload } from "../middlewares/cloudinary.middlewares.js";
 export const profileRouter: express.Router = express.Router();
 
 
-// ===== Fetches the requesting user's profile ===== \\
+// ====== Fetches a user's profile ===== \\
 profileRouter.get(
-    "/me",
-    verifyAccessTokenMiddleware,
-    getProfileController("requesting-user"),
-);
-
-
-// ====== Fetches another user's profile ===== \\
-profileRouter.get(
-    "/:userId",
-    verifyAccessTokenMiddleware,
-    validateId("userId"),
+    "/profile/public/:username",
+    getProfileValidation,
     processValidationMiddleware,
-    getProfileController("requested-user"),
+    getProfileController,
 ) 
+
+// ===== Fetches the requesting user's profile data ===== \\
+profileRouter.get(
+    "/profile/private",
+    verifyAccessTokenMiddleware,
+    getRequestingUserProfileController,
+) 
+
+// ===== Updates the requesting user's profile ===== \\
+profileRouter.patch(
+    "/profile",
+    verifyAccessTokenMiddleware,
+    parseFormData,
+    editProfileValidation,
+    processValidationMiddleware,
+    checkUsernameAvailabilityMiddleware,
+    profilePictureUpload,
+    editProfileController,
+)

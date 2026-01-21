@@ -1,15 +1,12 @@
-import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
 
-
-export interface AccessTokenPayload extends jwt.JwtPayload {
-    userId: string;
+export interface AccessTokenPayload {
     email: string;
-    username: string;
+    userId: string;  
     tokenVersion: number;
 };
 
-export interface RefreshTokenPayload extends jwt.JwtPayload {
+export interface RefreshTokenPayload  {
     userId: string;
     tokenVersion: number;
 };
@@ -18,20 +15,18 @@ export type LoginLean = {
     // ===== Auth ===== \\
     _id: mongoose.Types.ObjectId;
     passwordHash: string;
-    username: string;
     email: string;
     tokenVersion: number;
 
 
     // ===== Profile ===== \\
     profileUrl: string;
-    currentWinStreak: number 
-    createdAt: Date 
+    username: string;
+    currentWinStreak: number;
 } | null
 
 export type SessionLean = {
     _id: mongoose.Types.ObjectId;
-    username: string;
     email: string;
     tokenVersion: number;
 } | null

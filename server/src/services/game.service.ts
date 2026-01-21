@@ -2,17 +2,15 @@ import { Game, IGameDocument } from "../models/Game.js";
 import { MongoCrud, Query } from "../types/db-service.types.js";
 import { DatabaseService } from "./db.service.js";
 
-
-interface GameSettings {
-    status: "matched" | "in_queue" | "finished" | "created";
-    visibility: "public" | "canceled";
-    timeSettingMs: number;
-};
-
 interface GameCreationType {
-    creator: string;
-    preference: "X" | "O";
-    timeSettingMs: number;
+    players: {
+        userId: string;
+        preference: "X" | "O"
+    }[];
+    gameSettings: { 
+        visibility: "public";
+        status: "active";
+    }
 };
 
 // Database service

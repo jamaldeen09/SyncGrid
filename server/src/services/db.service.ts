@@ -14,6 +14,14 @@ export class DatabaseService {
             const bulkQuery = model.find(args.query).select(args.selectFields || "");
 
             if (args.paginationConfig) {
+                if (args.paginationConfig.sortOrder) {
+                    bulkQuery.sort({ 
+                        createdAt: args.paginationConfig.sortOrder === "oldest_to_newest" ? 1 : -1 
+                    })
+                } else {
+                    bulkQuery.sort({ createdAt: -1 })
+                }
+
                 bulkQuery.skip(args.paginationConfig.offset).limit(args.paginationConfig.limit);
             }
  
@@ -23,7 +31,7 @@ export class DatabaseService {
 
             return await bulkQuery.lean<LeanGeneric>().exec();
         }
-
+ 
         // ===== Single Document Logic ===== 
         if (!args.optionConfig) return null;
 
@@ -92,7 +100,8 @@ export class DatabaseService {
 
             return await query.lean<LeanGeneric>().exec()
         } else {
-            await model.updateOne(args.filterQuery, args.updateQuery)
+            if (!args.filterQuery) return null;
+            await model.updateOne((args.filterQuery), args.updateQuery)
         }
 
         return null

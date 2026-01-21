@@ -11,7 +11,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { AuthFormPropsType } from "@/components/modals/AuthModal";
 import { signupSchema, SignupSchemaType } from "@/hooks/auth/useSignup";
 
-
 const Signup = ({
   uiReducers: { openUi, closeUi },
   isLoading,

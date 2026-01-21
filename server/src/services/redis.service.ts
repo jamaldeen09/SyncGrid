@@ -7,7 +7,7 @@ export class RedisService {
         return await redisClient.get(key)
     }
 
-    // ===== Caches a value in redis ===== \\
+    // ===== Adds a value ===== \\
     async writeOperation<T>(
         key: string,
         value: T,
@@ -27,7 +27,7 @@ export class RedisService {
         }
     };
 
-    // ===== Deletes a cached value from redis ===== \\
+    // ===== Deletes a value ===== \\
     async deleteOperation(
         key?: string,
         pattern?: string,
@@ -44,5 +44,31 @@ export class RedisService {
             const keys = await redisClient.keys(pattern);
             keys.forEach(async (key) => await redisClient.del(key));
         }
+    }
+
+    /**
+     * It manages an element in a matchmaking queue
+     * @param key 
+     * @param operation 
+     * @param element 
+     */
+    async matchmakingQueueOperation<TElement>(
+        key: string,
+        operation: "grab-last" | "add" | "remove" | "get-length",
+        element?: TElement,
+    ) {
+        switch (operation) {
+            case "add":
+                return await redisClient.lPush(key, JSON.stringify(element));
+
+            case "grab-last":
+                return await redisClient.rPop(key);
+
+            case "remove":
+                return await redisClient.lRem(key, 0, JSON.stringify(element))
+
+            case "get-length":
+                return await redisClient.lLen(key)
+        };
     }
 }

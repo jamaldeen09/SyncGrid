@@ -1,52 +1,50 @@
 "use client"
 import React from "react";
 import { Badge } from "../ui/badge";
-import { GameControllerIcon, LightningIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
-import { useUi } from "@/contexts/UiContext";
+import { GameControllerIcon, LightningIcon, UsersThreeIcon } from "@phosphor-icons/react";
 import { ActionCard } from "../reusable/ActionCard";
+import { useRouter } from "next/navigation";
 
 const ActionCardsSection = (): React.ReactElement => {
-    // Hooks
-    const { openUi } = useUi()
+    const router = useRouter();
 
-    // ===== Action cards ===== \\
     const actionCards = [
         {
             id: 1,
             title: "Host Match",
-            description: "Configure your own game settings and wait for an opponent to join your game",
+            description: "Configure settings and wait for an opponent or an AI to join your game",
             icon: <GameControllerIcon weight="fill" className="h-6 w-6" />,
             gradient: "from-primary to-primary/70",
             buttonText: "Create",
-            funcToExecuteOnButtonClick: () => openUi("createGame")
+            funcToExecuteOnButtonClick: () => router.push("/new-game")
         },
         {
-            id: 4,
-            title: "Quick Match",
-            description: "Skip the setup and jump into the first available public game in the queue",
-            icon: <MagnifyingGlassIcon weight="fill" className="h-6 w-6" />,
-            gradient: "from-primary to-primary/70",
-            buttonText: "Join",
-            funcToExecuteOnButtonClick: () => { }
+            id: 2, // Changed ID for consistency
+            title: "Challenge Friend",
+            description: "Create a private room and send a direct invite link to a friend to play",
+            icon: <UsersThreeIcon weight="fill" className="h-6 w-6" />,
+            gradient: "from-indigo-500 to-primary", // Slightly different gradient to distinguish
+            buttonText: "Invite",
+            funcToExecuteOnButtonClick: () => router.push("/new-game?type=private")
         }
     ];
+
     return (
         <section>
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Quick Actions</h2>
+                <h2 className="text-2xl font-bold">Game Modes</h2>
                 <Badge variant="outline" className="gap-2">
                     <LightningIcon weight="fill" />
                     Live
                 </Badge>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2  gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {actionCards.map((actionCard) => (
                     <ActionCard
                         key={actionCard.id}
                         {...actionCard}
                     />
-                )
-                )}
+                ))}
             </div>
         </section>
     );

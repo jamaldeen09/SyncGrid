@@ -3,6 +3,7 @@ import { matchedData, validationResult } from "express-validator"
 import { ConfiguredRequest, ConfiguredResponse, ExtendedValidationError } from "../types/api.types.js";
 import { serverError, validateToken } from "../services/auth.services.js";
 import { UserService } from "../services/user.service.js";
+import { AccessTokenPayload, RefreshTokenPayload } from "src/types/auth.types.js";
 
 // User service
 const userService = new UserService();
@@ -38,22 +39,16 @@ export const processValidationMiddleware = async (req: Request, res: ConfiguredR
         next();
     } catch (err) {
         console.error(`Validation processing error\nFile: auth.middlewares.ts\nMiddleware: processValidationMiddleware\n${err}`);
-        return res.status(500).json({
-            success: false,
-            message: "A server error occured while trying to validate your data, please try again shortly",
-            error: {
-                code: "SERVER_ERROR",
-                statusCode: 500,
-            }
-        });
+        serverError(res, "A server error occured while trying to validate your data, please try again shortly", err)
     }
 }
 
 
 export const checkUsernameAvailabilityMiddleware = async (req: Request, res: ConfiguredResponse, next: NextFunction) => {
     // Extract the validated username attached to request
-    const { username } = (req as ConfiguredRequest).data as { username: string };
-
+    const { username } = (req as ConfiguredRequest).data as { username: string | undefined };
+    if (!username) return next();
+    
     try {
         const user = await userService.getSingleOrBulkUser({
             result: "single",
@@ -87,14 +82,14 @@ export const checkUsernameAvailabilityMiddleware = async (req: Request, res: Con
 }
 
 export const verifyAccessTokenMiddleware = async (req: Request, res: ConfiguredResponse, next: NextFunction) => {
-    const result = await validateToken(req, "accessToken");
+    const result = await validateToken<AccessTokenPayload>(req, "accessToken");
     if (!result.success) return res.status(result.error?.statusCode! || 401).json(result);
 
     next();
 }
 
 export const verifyRefreshTokenMiddleware = async (req: Request, res: ConfiguredResponse, next: NextFunction) => {
-    const result = await validateToken(req, "refreshToken");
+    const result = await validateToken<RefreshTokenPayload>(req, "refreshToken");
     if (!result.success) return res.status(result.error?.statusCode! || 401).json(result);
     
     next();

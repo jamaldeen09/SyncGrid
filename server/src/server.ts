@@ -3,26 +3,26 @@ import { initDb } from './config/database.config.js';
 import { envData } from './config/env.config.js';
 import express, { Application } from "express"
 import http from "http"
-import cors from "cors"
+import cors from "cors" 
 import { Server } from 'socket.io';
 import { authRouter } from './routes/auth.routes.js';
 import { profileRouter } from './routes/profile.routes.js';
 import { initSocket } from './config/socket.config.js';
-
+import { gameRouter } from './routes/game.routes.js';
 
 // Express app
-const app: Application = express();
+const app: Application = express(); 
 
 // Server instance (created on top of the express app)
-const server = http.createServer(app);
-
+const server = http.createServer(app);   
+ 
 // Global express middlewares  
 app.use(express.json());
 app.use(cors({
     origin:[envData.LOCAL_HOST_URL, envData.FRONTEND_URL],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
-}));
- 
+})); 
+   
 // Socket.io initialization (ws)
   
 // Config
@@ -41,15 +41,16 @@ initSocket(io);
 // MongoDb initialization 
 const dbConnection = await initDb(); 
    
-// Redis initialization;
-await initRedis();  
-
-// Routes
+// Redis initialization;  
+await initRedis();   
+   
+// Routes 
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/profile", profileRouter)
+app.use("/api/v1", profileRouter);
+app.use("/api/v1", gameRouter);
 
 // Listens for a port (if redis and database are connected)
 if (dbConnection && redisClient.isReady) server.listen(envData.PORT, () => console.log(`Server is running on: ${envData.HOST_URL}`));
- 
+  
 
- 
+    

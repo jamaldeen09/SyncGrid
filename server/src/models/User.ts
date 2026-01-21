@@ -4,10 +4,13 @@ import mongoose, { Document, Model, Schema } from "mongoose"
 export interface IUser {
     _id: mongoose.Types.ObjectId;
     email: string;
+    bio: string;
+    status: "online" | "offline";
     passwordHash: string;
     username: string;
     profileUrl: string;
     currentWinStreak: number;
+    bestWinStreak: number;
     tokenVersion: number;
     lastLogin: Date;
     createdAt: Date;
@@ -25,7 +28,7 @@ const UserSchema = new Schema<IUserDocument, IUserModel>({
     email: {
         type: String,
         required: true,
-        trim: true,
+        trim: true, 
         lowercase: true,
         match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Please enter a valid email address"],
     },
@@ -43,12 +46,28 @@ const UserSchema = new Schema<IUserDocument, IUserModel>({
 
     username: {
         type: String,
-        required: true,
+        required: true, 
         trim: true,
+        index: true,
         match: [
             /^(?!-)[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$/,
             `Username must pass these requirements:\n1. Must only contain letters, numbers, or hyphens\n2. Cannot begin with a hyphen\n3. Cannot end with a hyphen\n4. Cannot have consecutive hypens`
         ]
+    },
+
+    bio: {
+        type: String,
+        maxLength: 50,
+        trim: true,
+        default: "Hi there im using syncgrid"
+    },
+
+    status: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        enum: ["offline", "online"],
+        default: "offline"
     },
 
     profileUrl: {
@@ -62,11 +81,16 @@ const UserSchema = new Schema<IUserDocument, IUserModel>({
         default: 0
     },
 
+    bestWinStreak: {
+        type: Number,
+        default: 0
+    },
+
     lastLogin: {
         type: Date,
         default: Date.now,
     },
-}, {
+}, { 
     timestamps: true
 })
 

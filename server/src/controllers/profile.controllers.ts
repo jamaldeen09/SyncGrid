@@ -1,117 +1,245 @@
 import { Request } from 'express';
-import { ConfiguredRequest, ConfiguredResponse } from '../types/api.types.js';
+import { ApiResponsePayload, ConfiguredRequest, ConfiguredResponse } from '../types/api.types.js';
 import { serverError } from '../services/auth.services.js';
 import { UserService } from '../services/user.service.js';
 import { RedisService } from '../services/redis.service.js';
 import { ProfileLean } from '../types/profile.types.js';
 import { GameService } from '../services/game.service.js';
-import { ProfileType } from '@shared/index.js';
+import { ProfileType, UiProfileType } from '@shared/index.js';
+import mongoose from 'mongoose';
 
 // User service
 const userService = new UserService();
 
-// Redis service
+// Redis service  
 const redisService = new RedisService();
 
 // Gaem service
 const gameService = new GameService();
 
-export const getProfileController = (profile: "requesting-user" | "requested-user") => {
-    return async (req: Request, res: ConfiguredResponse) => {
 
-        // User id's
-        const tokenPayloadUserId = ((req as ConfiguredRequest).accessTokenPayload).userId;
+export const getProfileController = async (req: Request, res: ConfiguredResponse) => {
+    // Extract the desired profile's username
+    const { username } = (req as ConfiguredRequest).data as { username: string };
+    const key = `public-profile:${username.toLowerCase()}`; // convert the username to the lowercased version just for consistency
 
-        // Conditionally prepare userId
-        let userId: string = "";
-        if (profile === "requesting-user") userId = tokenPayloadUserId
-        if (profile === "requested-user") userId = ((req as ConfiguredRequest).data as { userId: string }).userId;
+    try {
+        // Check for cached profile
+        const cachedProfile = await redisService.readOperation(key);
 
-        // Cache key
-        const key = `profile-${userId}`;
-        try {
-            const cachedProfile = await redisService.readOperation(key);
-            if (!cachedProfile) {
-                // ===== Cache miss ===== \\
-                const user = await userService.getSingleOrBulkUser<ProfileLean>({
-                    result: "single",
-                    optionConfig: { option: "via-id", optionType: "find" },
-                    id: userId,
-                    selectFields: "currentWinStreak createdAt updatedAt profileUrl username"
-                }) as ProfileLean;
-
-                // ===== Check if doc exists ===== \\
-                if (!user) {
-                    if (profile === "requesting-user") {
-                        return res.status(401).json({
-                            success: false,
-                            message: "Unauthorized",
-                            error: {
-                                code: "UNAUTHORIZED",
-                                statusCode: 401,
-                            }
-                        });
+        if (!cachedProfile) {
+            // ===== Cache miss ===== \\
+            // User
+            const user = await userService.getSingleOrBulkUser<ProfileLean>({
+                result: "single",
+                optionConfig: {
+                    option: "via-query",
+                    optionType: "find"
+                },
+                query: {
+                    $expr: {
+                        $eq: [
+                            { $toLower: "$username" },
+                            username.toLowerCase()
+                        ]
                     }
+                },
+                selectFields: "createdAt updatedAt profileUrl username bestWinStreak bio status"
+            }) as ProfileLean;
 
-                    return res.status(404).json({
-                        success: false,
-                        message: "Requested user was not found",
-                        error: {
-                            code: "NOT_FOUND",
-                            statusCode: 404
-                        }
-                    });
+            // User was not found
+            if (!user)
+                return res.status(404).json({
+                    success: false,
+                    message: "User was not found",
+                    error: {
+                        code: "NOT_FOUND",
+                        statusCode: 404
+                    }
+                });
+
+            // Get the total amount of games won by the user
+            const totalGamesWon = await gameService.countGameDocs({
+                "players.userId": user._id,
+                winner: user._id
+            });
+
+            // Get the total number of games a user has played
+            const totalGamesPlayed = await gameService.countGameDocs({
+                "players.userId": user._id
+            })
+
+            // Profile data
+            let profileData: ProfileType = {
+                userId: user._id.toString(),
+                username: user.username,
+                bestWinStreak: user.bestWinStreak,
+                totalGamesWon,
+                totalGamesPlayed,
+                profileUrl: user.profileUrl,
+                createdAt: user.createdAt.toISOString(),
+                bio: user.bio,
+                status: user.status
+            };
+
+            // Cache the user in redis
+            await redisService.writeOperation<ProfileType>(`profile-${user.username.toLowerCase()}`, profileData, 300);
+
+            return res.status(200).json({
+                success: true,
+                message: "User's profile has been fetched successfully",
+                data: {
+                    profile: profileData
                 }
-
-
-                // Get the total amount of games won by the user
-                const totalGamesWon = await gameService.countGameDocs({
-                    players: { $in: [user._id] },
-                    winner: user._id
-                });
-
-                // Profile data
-                let profileData: ProfileType = {
-                    totalGamesWon,
-                    profileUrl: user.profileUrl,
-                    currentWinStreak: user.currentWinStreak,
-                    createdAt: user.createdAt.toISOString(),
-                };
-
-                // Cache the users profile for 5 minutes
-                await redisService.writeOperation<ProfileType>(`profile-${user._id}`, {
-                    ...profileData,
-                    username: user.username
-                });
-
-                return res.status(200).json({
-                    success: true,
-                    message: "Profile data has been fetched successfully",
-                    data: { 
-                        profile: (profile === "requesting-user") ? (profileData) : ({
-                            ...profileData,
-                            username: user.username
-                        })
+            })
+        } else {
+            // ===== Cache hit ===== \\
+            return res.status(200).json({
+                success: true,
+                message: "User's profile has been fetched successfully",
+                data: {
+                    profile: {
+                        ...(JSON.parse(cachedProfile)),
                     }
-                })
-            } else {
-                // ===== Cache hit ===== \\
-                return res.status(200).json({
-                    success: true,
-                    message: "Your profile data has been fetched successfully",
-                    data: { profile: JSON.parse(cachedProfile) }
-                })
-            }
-        } catch (err) {
-            // ===== Error handling (for requesting user and requested user) ===== \\
-            if (profile === "requesting-user") {
-                console.error(`Error occured during requesting user's profile fetch\nFile: profile.controllers.ts\nController: getRequestingUserProfileController\n${err}`);
-                serverError(res, "A server error occured while trying to fetch your profile data, please try again shortly", err)
-            } else {
-                console.error(`Error occured while trying to fetch requested user's profile\nFile: profile.controllers.ts\nController: getRequestingUserProfileController\n${err}`);
-                serverError(res, "A server error occured while trying to fetch the requested user's profile, please try again shortly", err)
-            }
+                }
+            });
         }
-    };
+    } catch (err) {
+        console.error(`Profile fetch error\nFile: profile.controllers.ts\nController: getProfileController\n${err}`);
+        serverError(res, `Failed to fetch user's profile`, err);
+    }
+};
+
+
+export const getRequestingUserProfileController = async (req: Request, res: ConfiguredResponse) => {
+    // Extract the requesting user's username
+    const { userId } = ((req as ConfiguredRequest).accessTokenPayload);
+    const key = `private-profile:${userId}`;
+
+    try {
+        // Check for cached profile
+        const cachedProfile = await redisService.readOperation(key);
+
+        if (!cachedProfile) {
+            // ===== Cache miss ===== \\
+            const user = await userService.getSingleOrBulkUser<(UiProfileType & {
+                _id: mongoose.Types.ObjectId
+            })>({
+                result: "single",
+                optionConfig: {
+                    optionType: "find",
+                    option: "via-id"
+                },
+                id: userId,
+                selectFields: "username profileUrl currentWinStreak"
+            }) as (UiProfileType & {
+                _id: mongoose.Types.ObjectId
+            });
+
+            if (!user)
+                return res.status(401).json({
+                    success: false,
+                    message: "Unauthorized",
+                    error: {
+                        code: "Unauthorized",
+                        statusCode: 401
+                    }
+                });
+
+            // Profile data
+            const profileData = {
+                username: user.username,
+                profileUrl: user.profileUrl,
+                currentWinStreak: user.currentWinStreak,
+            };
+
+            await redisService.writeOperation<UiProfileType>(key, profileData, 300);
+
+            return res.status(200).json({
+                success: true,
+                message: "Your profile data has been fetched successfully",
+                data: { profile: profileData }
+            })
+        } else {
+            // ===== Cache hit ===== \\
+            return res.status(200).json({
+                success: true,
+                message: "Your profile data has been fetched successfully",
+                data: { profile: JSON.parse(cachedProfile) }
+            })
+        }
+    } catch (err) {
+        console.error(`Profile fetch error\nFile: profile.controllers.ts\nController: getRequestingUserProfileController\n${err}`);
+        serverError(res, `Failed to fetch your profile`, err);
+    }
 }
 
+export const editProfileController = async (req: Request, res: ConfiguredResponse) => {
+    // User's id
+    const { userId } = (req as ConfiguredRequest).accessTokenPayload;
+
+    // Update data
+    const updateData = (req as ConfiguredRequest).data as { bio?: string; username?: string; };
+    const profileUrl = (req as ConfiguredRequest).profileUrl;
+
+    // Boolean to determine if the requesting user is eligible for an update
+    const isEligibleForUpdate = Object.keys(updateData).length >= 1 || profileUrl
+    try {
+        if (isEligibleForUpdate) {
+            // Update query
+            let updateQuery: {
+                username?: string;
+                bio?: string;
+                profileUrl?: string;
+            } = {...updateData};
+
+            // Conditionally add profile url
+            if (profileUrl) updateQuery["profileUrl"] = profileUrl;
+
+            // Update the user
+            const user = await userService.updateUser<{
+                _id: mongoose.Types.ObjectId,
+                username: string;
+            } | null>({
+                returnUpdatedDoc: true,
+                updateQuery,
+                optionConfig: { optionType: "find", option: "via-id" },
+                id: userId,
+                selectFields: "username"
+            }) as {
+                _id: mongoose.Types.ObjectId
+                username: string;
+            } | null;
+
+            if (!user)
+                return res.status(401).json({
+                    success: false,
+                    message: "Unauthorized",
+                    error: {
+                        code: "UNAUTHORIZED",
+                        statusCode: 401,
+                    },
+                });
+
+
+            // Delete cache key
+            const firstKey = `private-profile:${user._id}`;
+            const secondKey = `public-profile:${user.username}`;
+
+            // Delete both private and public cache keys
+            await redisService.deleteOperation(firstKey);
+            await redisService.deleteOperation(secondKey)
+        };
+
+        // Response obj being sent to frontend
+        let responseJSON: ApiResponsePayload = {
+            success: true,
+            message: "Your profile has been updated successfully",
+        };
+
+        return res.status(200).json(responseJSON);
+    } catch (err) {
+        console.error(`Profile update error\nFile: profile.controllers.ts\nController: editProfileController\n${err}`);
+        serverError(res, "A server error occured while trying to update your profile, please try again shortly", err);
+    }
+}

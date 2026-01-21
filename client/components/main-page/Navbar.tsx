@@ -19,19 +19,24 @@ import Logo from "../reusable/Logo";
 import ThemeSwitcher from "../reusable/ThemeSwitcher";
 import { defaultProfileUrl } from "@/lib/utils";
 import useLogout from "@/hooks/auth/useLogout";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import Loader from "../reusable/Loader";
+import { Badge } from "../ui/badge";
+import { useRouter } from "next/navigation";
 
-const Navbar = (): React.ReactElement => {
+const Navbar = ({ fixed = true }: {
+    fixed?: boolean
+}): React.ReactElement => {
     // Hooks
     const { openUi } = useUi();
     const { setAuth } = useAuth();
     const { executeService, isLoading } = useLogout();
+    const router = useRouter();
 
     // Global states
     const {
-        auth: { isAuthenticated, username },
-        profile: { profileUrl }
+        auth: { isAuthenticated, email },
+        profile: { profileUrl, username }
     } = useAppSelector((state) => state.user);
 
     /**
@@ -57,7 +62,7 @@ const Navbar = (): React.ReactElement => {
             </AnimatePresence>
 
             {/* ===== Navbar ===== */}
-            <nav className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/40">
+            <nav className={`${fixed && "sticky top-0 z-50"} backdrop-blur-lg bg-background/80 border-b border-border/40`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
 
@@ -79,23 +84,8 @@ const Navbar = (): React.ReactElement => {
                             {/* ===== User Profile / Auth action buttons ===== */}
                             {isAuthenticated ? (
                                 <div className="flex items-center gap-4">
-                                    {/* <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50">
-                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                        <span className="text-sm">24 players online</span>
-                                    </div> */}
-
-                                    {/* ==== Games ===== */}
-                                    <Link href="/games" className="cursor-default">
-                                        <div className="relative cursor-default">
-                                            <Button variant="outline" className="rounded-full size-10" size="icon-lg">
-                                                <GameControllerIcon />
-                                            </Button>
-                                            {/* ===== Indicator for games being played ===== */}
-                                            <p className="cursor-default absolute bottom-0 right-0 bg-primary text-white rounded-full size-4 flex justify-center items-center font-semibold text-[8px]">
-                                                1
-                                            </p>
-                                        </div>
-                                    </Link>
+                                    {/* Username */}
+                                    <Badge className="bg-transparent hover:bg-card hidden sm:block">{username}</Badge>
 
                                     {/* Dropdown menu */}
                                     <DropdownMenu>
@@ -109,7 +99,7 @@ const Navbar = (): React.ReactElement => {
                                                     fallback={
                                                         <div className="bg-primary text-white rounded-full flex justify-center items-center
                                             size-9.5">
-                                                            {username.split("")[0].toUpperCase()}
+                                                            {username.charAt(0).toUpperCase()}
                                                         </div>
                                                     }
                                                 />
@@ -117,9 +107,16 @@ const Navbar = (): React.ReactElement => {
                                         </DropdownMenuTrigger>
 
                                         <DropdownMenuContent className="w-40 mr-4 mt-2">
-                                            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                                            <DropdownMenuLabel className="p-3">
+                                                <div className="flex flex-col gap-1">
+                                                    <p className="text-xs font-black uppercase">{username}</p>
+                                                    <p className="text-[10px] text-muted-foreground truncate">{email}</p>
+                                                </div>
+                                            </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem>
+                                            <DropdownMenuItem
+                                              onClick={() => router.push(`/profile/${username}`)}
+                                            >
                                                 <UserIcon />
                                                 Profile
                                             </DropdownMenuItem>
@@ -150,10 +147,6 @@ const Navbar = (): React.ReactElement => {
                                 </div>
                             )}
 
-                            {/* ===== Theme switcher ===== */}
-                            <ThemeSwitcher
-                                className={`${!isAuthenticated && "size-8"}`}
-                            />
                         </div>
                     </div>
                 </div>

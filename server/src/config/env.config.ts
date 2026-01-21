@@ -15,6 +15,9 @@ interface EnvData {
     REDIS_PASSWORD: string;
     REDIS_HOST: string;
     REDIS_PORT: number;
+    CLOUDINARY_NAME: string;
+    CLOUDINARY_KEY: string;
+    CLOUDINARY_SECRET: string;
 }
 
 // Contains data in .env file
@@ -29,6 +32,9 @@ export const envData: EnvData = {
     REDIS_USERNAME: process.env.REDIS_USERNAME!,
     REDIS_PASSWORD: process.env.REDIS_PASSWORD!,
     REDIS_HOST: process.env.REDIS_HOST!,
-    REDIS_PORT: parseInt(process.env.REDIS_PORT! || "")
+    REDIS_PORT: parseInt(process.env.REDIS_PORT! || ""),
+    CLOUDINARY_NAME: process.env.CLOUDINARY_NAME!,
+    CLOUDINARY_SECRET: process.env.CLOUDINARY_SECRET!,
+    CLOUDINARY_KEY: process.env.CLOUDINARY_KEY!,
 }
 

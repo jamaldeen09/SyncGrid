@@ -79,11 +79,11 @@ export class UserService {
             }
         }
 
-        // Cache the user
+        // Cache the user' session
         await redisService.writeOperation<{
             userId: string;
             email: string;
-            username: string;
+            tokenVersion: number;
         }>(key, sessionData, 1800);
 
         if (returnTokens) {

@@ -1,3 +1,4 @@
+import { IGame } from './../models/Game';
 import { ValidationError } from "express-validator";
 import { Request, Response } from "express";
 import { AccessTokenPayload, RefreshTokenPayload } from "./auth.types";
@@ -6,6 +7,8 @@ export interface ConfiguredRequest extends Request {
     accessTokenPayload: AccessTokenPayload;
     refreshTokenPayload: RefreshTokenPayload;
     data: unknown;
+    game: IGame;
+    profileUrl: string | undefined;
 }
 
 export interface ApiResponsePayload {

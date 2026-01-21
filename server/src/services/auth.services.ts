@@ -23,7 +23,11 @@ export const createToken = (type: "accessToken" | "refreshToken", payload: Acces
  * @param req 
  * @param tokenType 
  */
-export const validateToken = async (req: Request, tokenType: "accessToken" | "refreshToken"): Promise<ApiResponsePayload> => {
+export const validateToken = async <TPayload extends ({
+    email?: string;
+    userId: string;  
+    tokenVersion: number;
+})>(req: Request, tokenType: "accessToken" | "refreshToken"): Promise<ApiResponsePayload> => {
     const unauthorizedResponse = {
         success: false,
         message: "Unauthorized",
@@ -45,20 +49,26 @@ export const validateToken = async (req: Request, tokenType: "accessToken" | "re
         if (!token)  return unauthorizedResponse
 
         // Attach decoded payload to request
-        const decoded = jwt.verify(token, secret) as AccessTokenPayload | RefreshTokenPayload;
+        const decoded = jwt.verify(token, secret) as TPayload;
 
-        const payload = tokenType === "accessToken" ? {
-            userId: decoded.userId,
-            username: decoded.username,
-            email: decoded.email
-        } as AccessTokenPayload : {
-            userId: decoded.userId,
-            tokenVersion: decoded.tokenVersion,
-        } as RefreshTokenPayload;
+        let payload: TPayload;
+        
+        if (tokenType === "accessToken") {
+            payload = {
+                userId: decoded.userId,
+                email: decoded.email,
+                tokenVersion: decoded.tokenVersion,
+            } as TPayload
+        } else {
+            payload = {
+                userId: decoded.userId,
+                tokenVersion: decoded.tokenVersion,
+            } as TPayload
+        }
 
         if (tokenType === "accessToken") (req as ConfiguredRequest).accessTokenPayload = payload as AccessTokenPayload;
-        if (tokenType === "refreshToken") (req as ConfiguredRequest).refreshTokenPayload = payload as RefreshTokenPayload;
-
+        if (tokenType === "refreshToken") (req as ConfiguredRequest).refreshTokenPayload = payload;
+        
         return {
             success: true,
             message: "Token has been validated successfully"
@@ -79,13 +89,17 @@ export const validateToken = async (req: Request, tokenType: "accessToken" | "re
 }
 
 export const serverError = (res: ConfiguredResponse, errMsg: string, err: unknown) => {
+    const typedError = err as Record<any, any>
     return res.status(500).json({
         success: false,
         message: errMsg,
         error: {
             code: "SERVER_ERROR",
             statusCode: 500,
-            details: err,
+            details: Object.keys(typedError).includes("message") ? ({
+                ...typedError, 
+                msg: typedError.message
+            }) : (err),
         }
     })
 }

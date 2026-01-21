@@ -12,7 +12,6 @@ export interface LoginCredentials {
 
 export interface SessionData {
     userId: string
-    username: string;
     email: string;
     tokenVersion: number;
-}
+} 

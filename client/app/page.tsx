@@ -4,12 +4,13 @@ import HeroSection from "@/components/main-page/HeroSection";
 import Navbar from "@/components/main-page/Navbar";
 import PublicGamesSection from "@/components/main-page/PublicGamesSection";
 import AuthProvider from "@/providers/AuthProvider";
-import ProfileProvider from "@/providers/ProfileProvider";
+import PrivateProfileProvider from "@/providers/PrivateProfileProvider";
 
 const MainPage = (): React.ReactElement => {
+
   return (
     <AuthProvider>
-      <ProfileProvider>
+      <PrivateProfileProvider>
         <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5 dark:from-background dark:via-background dark:to-primary/10 text-foreground">
           {/* ===== Navbar ===== */}
           <Navbar />
@@ -26,7 +27,7 @@ const MainPage = (): React.ReactElement => {
             <PublicGamesSection />
           </main>
         </div>
-      </ProfileProvider>
+      </PrivateProfileProvider>
     </AuthProvider>
   );
 };

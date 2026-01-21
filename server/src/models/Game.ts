@@ -4,17 +4,15 @@ import mongoose, { Model, Schema, Document } from "mongoose"
 // Schema type
 export interface IGame {
     _id: mongoose.Types.ObjectId;
-
-    // ===== game creator and winner ===== \\
-    creator: mongoose.Types.ObjectId;
     winner: mongoose.Types.ObjectId | null;
+    result: "decisive" | "draw" | "pending";
 
     // ===== Players ===== \\
     players: {
         preference: "X" | "O";
         userId: mongoose.Types.ObjectId;
     }[];
-
+ 
     // ===== Moves ===== \\
     moves: {
         playedAt: Date;
@@ -25,18 +23,13 @@ export interface IGame {
 
     // ===== Game settings ===== \\
     gameSettings: {
-        status: "matched" | "in_queue" | "finished" | "created";
-        visibility: "public" | "canceled";
-        timeSettingMs: number;
+        status: "active" | "finished";
+        visibility: "public" | "private";
     };
 
     // ===== Game duration and finish date ==== \\
     durationMs: number;
     finishedAt: Date;
-
-    // ===== Cancelation ===== \\
-    cancelationReason: string;
-    canceledAt: Date; 
 
     // ===== Timestamps ===== \\
     createdAt: Date;
@@ -52,17 +45,18 @@ export type IGameQuery = IGameDocument | null;
 
 // Schema
 const GameSchema = new Schema<IGameDocument, IGameModel>({
-    creator: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-        trim: true,
-    },
-
     winner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         default: null
+    },
+
+    result: {
+        type: String,
+        enum: ["decisive", "draw", "abandoned", "pending"],
+        default: "pending",
+        lowercase: true,
+        trim: true,
     },
 
     players: {
@@ -90,12 +84,12 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
 
     moves: {
         type: [{
-            played_at: {
+            playedAt: {
                 type: Date,
                 required: true
             },
 
-            played_by: {
+            playedBy: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "User",
                 required: true,
@@ -127,7 +121,7 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
     gameSettings: {
         status: {
             type: String,
-            enum: ["matched", "in_queue", "finished", "created"],
+            enum: ["active", "finished"],
             lowercase: true,
             trim: true,
             required: true,
@@ -135,16 +129,11 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
 
         visibility: {
             type: String,
-            enum: ["private", "public", "canceled"],
+            enum: ["public", "private"],
             lowercase: true,
             trim: true,
-            required: true
+            required: true,
         },
-
-        timeSettingMs: {
-            type: Number,
-            required: true
-        }
     },
 
     durationMs: {
@@ -155,17 +144,6 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
     finishedAt: {
         type: Date,
         default: null,
-    },
-
-    // Cancelation 
-    cancelationReason: {
-        type: String,
-        default: null
-    },
-
-    canceledAt: {
-        type: Date,
-        default: null
     },
 }, {
     timestamps: true

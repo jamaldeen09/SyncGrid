@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { LoginCredentials, SignupCredentials, SessionData, ProfileType } from '@shared/index.js';
+import { LoginCredentials, SignupCredentials, SessionData,  UiProfileType } from '@shared/index.js';
 import { Request } from 'express';
 import { createToken, serverError } from '../services/auth.services.js';
 import { ConfiguredRequest, ConfiguredResponse } from '../types/api.types.js';
@@ -7,17 +7,12 @@ import { UserService } from '../services/user.service.js';
 import { LoginLean, SessionLean } from '../types/auth.types.js';
 import { RedisService } from '../services/redis.service.js';
 import { ExistsQueryLean } from '../types/db-service.types.js';
-import { GameService } from '../services/game.service.js';
 
-
-// User service
+// User service 
 const userService = new UserService();
 
 // Redis service
 const redisService = new RedisService()
-
-// Game service
-const gameService = new GameService();
 
 export const signupController = async (req: Request, res: ConfiguredResponse) => {
     // Extract validated signup credentials attached to request
@@ -43,21 +38,12 @@ export const signupController = async (req: Request, res: ConfiguredResponse) =>
         // Create a new document in the db
         const newUser = await userService.createUser(signupCredentials);
 
-        // Profile data
-        let profileData: ProfileType = {
-            totalGamesWon: 0,
-            profileUrl: newUser.profileUrl,
-            currentWinStreak: newUser.currentWinStreak,
-            createdAt: newUser.createdAt.toISOString(),
-        };
-
         // Session data
         const sessionData = {
             userId: newUser._id.toString(),
-            username: newUser.username,
             email: newUser.email,
             tokenVersion: newUser.tokenVersion
-        }
+        };
 
         // Cache the session for 30 minutes
         const tokens = await userService.newSession({
@@ -68,11 +54,12 @@ export const signupController = async (req: Request, res: ConfiguredResponse) =>
             },
         });
 
-        // Cache profile data for 5 minutes
-        await redisService.writeOperation<ProfileType>(`profile-${newUser._id}`, {
-            ...profileData,
-            username: newUser.username
-        }, 300);
+        // Prepare profile data to send to the frontend
+        const profileData: UiProfileType = {
+            profileUrl: newUser.profileUrl,
+            username: newUser.username,
+            currentWinStreak: newUser.currentWinStreak,
+        }
 
         return res.status(201).json({
             success: true,
@@ -94,19 +81,19 @@ export const loginController = async (req: Request, res: ConfiguredResponse) => 
     // Extract validated login credentials attached to request
     const loginCredentials = (req as ConfiguredRequest).data as LoginCredentials;
     const loginErrObj = {
-        success: false, 
+        success: false,
         message: "Invalid login credentials",
         error: {
             code: "LOGIN_ERROR",
             statusCode: 401,
         }
-    } 
+    }
     try {
         const user = await userService.getSingleOrBulkUser<LoginLean>({
             result: "single",
             optionConfig: { optionType: "find", option: "via-query" },
             query: { email: loginCredentials.email },
-            selectFields: "passwordHash username email tokenVersion profileUrl currentWinStreak createdAt",
+            selectFields: "passwordHash username email tokenVersion profileUrl",
         }) as LoginLean;
 
         // Check if the user's document exists in the database
@@ -117,28 +104,11 @@ export const loginController = async (req: Request, res: ConfiguredResponse) => 
         if (!isPasswordCorrect)
             return res.status(401).json(loginErrObj);
 
-
-        // Search for the total number of games the requesting user has won
-        // (for profile payload)
-        const totalGamesWon = await gameService.countGameDocs({
-            players: { $in: [user._id] },
-            winner: user._id
-        });
-
         // Session data
         const sessionData = {
             userId: user._id.toString(),
             email: user.email,
-            username: user.username,
             tokenVersion: user.tokenVersion
-        };
-
-        // Profile data
-        let profileData: ProfileType = {
-            totalGamesWon,
-            profileUrl: user.profileUrl,
-            currentWinStreak: user.currentWinStreak,
-            createdAt: user.createdAt.toISOString(),
         };
 
         // Cache session for 30 minutes
@@ -150,11 +120,12 @@ export const loginController = async (req: Request, res: ConfiguredResponse) => 
             },
         });
 
-        // Cache profile data for 5 minutes
-        await redisService.writeOperation<ProfileType>(`profile-${user._id}`, {
-            ...profileData,
-            username: user.username
-        }, 300);
+        // Prepare profile data to send to the frontend
+        const profileData: UiProfileType = {
+            username: user.username,
+            profileUrl: user.profileUrl,
+            currentWinStreak: user.currentWinStreak,
+        }
 
         return res.status(200).json({
             success: true,
@@ -186,7 +157,7 @@ export const getSessionController = async (req: Request, res: ConfiguredResponse
                 result: "single",
                 optionConfig: { optionType: "find", option: "via-id" },
                 id: userId,
-                selectFields: "username email tokenVersion",
+                selectFields: "email tokenVersion",
             }) as SessionLean | null;
 
             if (!user)
@@ -203,12 +174,11 @@ export const getSessionController = async (req: Request, res: ConfiguredResponse
             await userService.newSession({
                 sessionData: {
                     userId: user._id.toString(),
-                    username: user.username,
                     email: user.email,
                     tokenVersion: user.tokenVersion,
                 },
 
-                returnTokens: false
+                returnTokens: false,
             })
 
             return res.status(200).json({
@@ -246,7 +216,7 @@ export const refreshController = async (req: Request, res: ConfiguredResponse) =
                     optionType: "find"
                 },
                 id: userId,
-                selectFields: "username email tokenVersion",
+                selectFields: "email tokenVersion",
             }) as SessionLean;
 
             if (!user)
@@ -275,7 +245,6 @@ export const refreshController = async (req: Request, res: ConfiguredResponse) =
             const data = await userService.newSession({
                 sessionData: {
                     userId: user._id.toString(),
-                    username: user.username,
                     email: user.email,
                     tokenVersion: user.tokenVersion,
                 },
