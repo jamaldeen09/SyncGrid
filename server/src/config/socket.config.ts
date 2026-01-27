@@ -3,12 +3,12 @@ import { SocketService } from "../services/socket.service.js";
 import { events } from "../lib/events.js";
 import { MatchmakingService } from "../services/matchmaking.service.js";
 import { NewMoveArgs } from "@shared/index.js";
-import { GamePlayService } from "src/services/game-play.service.js";
+import { GamePlayService } from "../services/game-play.service.js";
 import jwt from "jsonwebtoken"
 import { envData } from "./env.config.js";
 import { AccessTokenPayload } from "../types/auth.types.js";
 import { ConfiguredSocket } from "../types/socket.types.js";
-import { redisService } from "src/services/redis.service.js";
+import { redisService } from "../services/redis.service.js";
 
 export const initSocket = (io: Server) => {
 

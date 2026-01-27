@@ -3,7 +3,7 @@ import { matchedData, validationResult } from "express-validator"
 import { ConfiguredRequest, ConfiguredResponse, ExtendedValidationError } from "../types/api.types.js";
 import { serverError, validateToken } from "../services/auth.services.js";
 import { userService } from "../services/user.service.js";
-import { AccessTokenPayload, RefreshTokenPayload } from "src/types/auth.types.js";
+import { AccessTokenPayload, RefreshTokenPayload } from "../types/auth.types.js";
 
 export const processValidationMiddleware = async (req: Request, res: ConfiguredResponse, next: NextFunction) => {
     try {
