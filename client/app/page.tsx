@@ -1,37 +1,33 @@
 "use client"
-import ActionCardsSection from "@/components/main-page/ActionCardsSection";
-import HeroSection from "@/components/main-page/HeroSection";
+import CoreWorkspace from "@/components/main-page/CoreWorkspace";
+import Footer from "@/components/main-page/Footer";
 import Navbar from "@/components/main-page/Navbar";
-import PublicGamesSection from "@/components/main-page/PublicGamesSection";
 import AuthProvider from "@/providers/AuthProvider";
+import BannerLiveGameProvider from "@/providers/BannerLiveGameProvider";
 import PrivateProfileProvider from "@/providers/PrivateProfileProvider";
+import SocketProvider from "@/providers/SocketProvider";
 
-const MainPage = (): React.ReactElement => {
+const MainPage = () => {
+    return (
+        <AuthProvider>
+            <SocketProvider>
+                <PrivateProfileProvider>
+                    <BannerLiveGameProvider>
+                        <div className="h-screen w-full bg-[#F8F8F8] text-zinc-900 font-sans flex flex-col selection:bg-emerald-100">
+                            {/* ===== Navbar ===== */}
+                            <Navbar />
 
-  return (
-    <AuthProvider>
-      <PrivateProfileProvider>
-        <div className="min-h-screen bg-linear-to-br from-background via-background to-primary/5 dark:from-background dark:via-background dark:to-primary/10 text-foreground">
-          {/* ===== Navbar ===== */}
-          <Navbar />
+                            {/* ===== Core workspace ===== */}
+                            <CoreWorkspace />
 
-          {/* ===== Main content ===== */}
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-            {/* Hero section */}
-            <HeroSection />
-
-            {/* Action cards section */}
-            <ActionCardsSection />
-
-            {/* Public games section */}
-            <PublicGamesSection />
-          </main>
-
-          <MatchResult />
-        </div>
-      </PrivateProfileProvider>
-    </AuthProvider>
-  );
+                            {/* ===== Footer ===== */}
+                            <Footer />
+                        </div>
+                    </BannerLiveGameProvider>
+                </PrivateProfileProvider>
+            </SocketProvider>
+        </AuthProvider>
+    );
 };
 
 export default MainPage;

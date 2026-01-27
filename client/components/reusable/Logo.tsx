@@ -1,8 +1,17 @@
+import Image from "next/image";
 import React from "react";
 
-const Logo = (): React.ReactElement => {
+const Logo = ({ width = 30, height = 30} : {
+    width?: number;
+    height?: number;
+}): React.ReactElement => {
   return (
-    <div className="bg-primary text-white font-semibold w-8 h-8 flex justify-center items-center">S</div>
+    <Image 
+      src="/favicon.svg"
+      alt="syncgrid_logo"
+      width={width}
+      height={height}
+    />
   );
 };
 

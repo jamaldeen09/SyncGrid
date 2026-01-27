@@ -1,155 +1,144 @@
 "use client"
-import React from "react";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User, Gamepad2, LogOut } from "lucide-react"
 import Link from "next/link";
 import { Button } from "../ui/button";
-import { GameControllerIcon, SignOutIcon, UserIcon } from "@phosphor-icons/react";
-import { useUi } from "@/contexts/UiContext";
-import { Auth, useAuth } from "@/contexts/AuthContext";
-import CustomAvatar from "../reusable/CustomAvatar";
 import { useAppSelector } from "@/redux/store";
-import Logo from "../reusable/Logo";
-import ThemeSwitcher from "../reusable/ThemeSwitcher";
-import { defaultProfileUrl } from "@/lib/utils";
 import useLogout from "@/hooks/auth/useLogout";
-import { AnimatePresence } from "framer-motion";
 import Loader from "../reusable/Loader";
-import { Badge } from "../ui/badge";
-import { useRouter } from "next/navigation";
+import { useUi } from "@/contexts/UiContext";
+import { useEffect, useState } from "react";
+import { useBannerLiveGame } from "@/contexts/BannerLiveGameContext";
+import Logo from "../reusable/Logo";
 
-const Navbar = ({ fixed = true }: {
-    fixed?: boolean
-}): React.ReactElement => {
-    // Hooks
-    const { openUi } = useUi();
-    const { setAuth } = useAuth();
-    const { executeService, isLoading } = useLogout();
-    const router = useRouter();
+const Navbar = (): React.ReactElement => {
+    const { bannerLiveGameId } = useBannerLiveGame();
 
-    // Global states
-    const {
-        auth: { isAuthenticated, email },
-        profile: { profileUrl, username }
-    } = useAppSelector((state) => state.user);
 
-    /**
-     * Enables the auth modal for logging in, signing up or password reset
-     * @param auth
-     */
-    const enableAuthModal = (auth: Auth) => {
-        setAuth(auth);
-        openUi("auth");
-    }
+    // Ui context hook
+    const ui = useUi().ui;
+
+    // Global state to determine if the current user is authenticated
+    const isAuthenticated = useAppSelector((state) => state.user.auth.isAuthenticated);
+
+    // Profile
+    const profile = useAppSelector((state) => state.user.profile);
+
+    // Fallback string
+    const fallbackProfileStr = `${profile.username.charAt(0).toUpperCase()} ${profile.username.charAt(1).toUpperCase()}`;
+
+    // ===== Api service for logout ===== \\
+    const { isLoading, executeService } = useLogout()
+
+    // Nav action buttons
+    const navActionButtons = [
+        {
+            id: 1,
+            icon: <Gamepad2 size={18} />,
+            isLink: true,
+            includeValue: true,
+            route: `/profile/${profile.username}`
+        },
+        {
+            id: 2,
+            icon: <User size={18} />,
+            isLink: true,
+            includeValue: false,
+            route: `/profile/${profile.username}`,
+        },
+        {
+            id: 3,
+            icon: <LogOut size={18} />,
+            isLink: false,
+            includeValue: false,
+            funcToExecuteOnClick: () => executeService({}),
+        }
+    ];
     return (
         <>
-            {/* ===== Logging out load state ===== \\ */}
-            <AnimatePresence>
-                {isLoading && (
-                    <div className="supports-backdrop-filter:backdrop-blur-xs fixed inset-0 z-100 flex justify-center items-center bg-black/10">
-                        <div className="flex flex-col w-full max-w-sm items-center justify-center text-center">
-                            <Loader />
-                            <p className="animate-pulse mt-28 text-transparent bg-clip-text bg-linear-to-br from-primary to-primary/30 ml-6">Logging out...</p>
-                        </div>
-                    </div>
-                )}
-            </AnimatePresence>
+            {/* ===== Load state for logging out ===== */}
+            {(isLoading) && (
+                <div className="flex inset-0 h-screen fixed top-0 z-100 justify-center items-center bg-white">
+                    <Loader message="Logging out..." />
+                </div>
+            )}
 
             {/* ===== Navbar ===== */}
-            <nav className={`${fixed && "sticky top-0 z-50"} backdrop-blur-lg bg-background/80 border-b border-border/40`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
+            <nav className="w-full h-20 px-4 sm:px-8 flex shrink-0 justify-between items-center border-b border-zinc-200 bg-white z-50">
 
-                        {/* ===== Branding ===== */}
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
-                                <Logo />
-                            </div>
-                            <div className="flex flex-col">
-                                <p className="text-xl font-bold bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                                    SyncGrid
-                                </p>
-                                <span className="text-xs text-muted-foreground">Live Tic-Tac-Toe</span>
-                            </div>
-                        </div>
+                {/* Logo */}
+                <Logo />
 
-                        <div className="flex items-center gap-4">
-                            {/* ===== User Profile / Auth action buttons ===== */}
-                            {isAuthenticated ? (
-                                <div className="flex items-center gap-4">
-                                    {/* Username */}
-                                    <Badge className="bg-transparent hover:bg-card hidden sm:block">{username}</Badge>
+                {/* Unauthenticated Actions */}
+                {(!isAuthenticated) && (
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <Button
+                            variant="ghost"
+                            asChild
+                            className="text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:text-emerald-600 hover:bg-transparent px-2 sm:px-4"
+                        >
+                            <Link href="/login">Log in</Link>
+                        </Button>
 
-                                    {/* Dropdown menu */}
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger className="outline-none">
-                                            <div className="size-9.5">
-                                                <CustomAvatar
-                                                    size="fill"
-                                                    src={profileUrl || defaultProfileUrl}
-                                                    alt="profile_url"
-                                                    className="hover:opacity-70 transition-all duration-100"
-                                                    fallback={
-                                                        <div className="bg-primary text-white rounded-full flex justify-center items-center
-                                            size-9.5">
-                                                            {username.charAt(0).toUpperCase()}
-                                                        </div>
-                                                    }
-                                                />
-                                            </div>
-                                        </DropdownMenuTrigger>
-
-                                        <DropdownMenuContent className="w-40 mr-4 mt-2">
-                                            <DropdownMenuLabel className="p-3">
-                                                <div className="flex flex-col gap-1">
-                                                    <p className="text-xs font-black uppercase">{username}</p>
-                                                    <p className="text-[10px] text-muted-foreground truncate">{email}</p>
-                                                </div>
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                              onClick={() => router.push(`/profile/${username}`)}
-                                            >
-                                                <UserIcon />
-                                                Profile
-                                            </DropdownMenuItem>
-
-                                            <DropdownMenuItem
-                                                onClick={() => executeService({})}
-                                                className="hover:bg-destructive/30!"
-                                            >
-                                                <SignOutIcon />
-                                                Logout
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-4">
-                                    <Button
-                                        onClick={() => enableAuthModal("login")}
-                                        variant="outline"
-                                    >
-                                        Login
-                                    </Button>
-                                    <Button
-                                        onClick={() => enableAuthModal("signup")}
-                                    >
-                                        Signup
-                                    </Button>
-                                </div>
-                            )}
-
-                        </div>
+                        <Button
+                            asChild
+                            className="bg-zinc-900 hover:bg-emerald-600 text-white rounded-none text-[10px] sm:text-xs font-bold uppercase tracking-widest px-4 sm:px-6 h-9 sm:h-10 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
+                        >
+                            <Link href="/signup">Sign up</Link>
+                        </Button>
                     </div>
-                </div>
+                )}
+
+                {/* Authenticated Actions */}
+                {(isAuthenticated) && (
+                    <div className="flex items-center gap-3 sm:gap-8">
+                        <div className="flex items-center gap-3 sm:gap-4 border-r border-zinc-200 pr-3 sm:pr-8">
+                            {navActionButtons.map((btn) => (
+                                btn.isLink ? (
+                                    <div key={btn.id} className="relative group flex justify-center items-center">
+                                        <Link
+                                            href={btn.route!}
+                                            className="text-zinc-400 group-hover:text-emerald-600 transition-colors shrink-0 cursor-default"
+                                        >
+                                            {btn.icon}
+                                        </Link>
+
+                                        {(btn.includeValue) && (
+                                            bannerLiveGameId !== null && (
+                                                <div className="w-3 h-3 flex justify-center items-center text-[8px] text-white rounded-full bg-primary absolute -bottom-0.5 -right-1">1</div>
+                                            )
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div key={btn.id} className="relative group flex justify-center items-center">
+                                        <button
+                                            type="button"
+                                            onClick={btn.funcToExecuteOnClick}
+                                            className="text-zinc-400 group-hover:text-red-500 transition-colors shrink-0"
+                                        >
+                                            {btn.icon}
+                                        </button>
+
+                                        {(btn.includeValue) && (
+                                            bannerLiveGameId !== null && (
+                                                <div className="w-3 h-3 flex justify-center items-center text-[8px] text-white rounded-full bg-primary absolute -bottom-0.5 -right-1">1</div>
+                                            )
+                                        )}
+                                    </div>
+                                )
+                            ))}
+                        </div>
+
+                        <button className="flex items-center gap-3 group shrink-0">
+                            {/* Hide username on small screens to prevent squashing */}
+                            <span className="hidden sm:block text-xs font-semibold">@{profile.username}</span>
+                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-transparent group-hover:border-emerald-500 transition-all">
+                                <AvatarImage src={profile.profileUrl} />
+                                <AvatarFallback>{profile.username ? (fallbackProfileStr) : "SG"}</AvatarFallback>
+                            </Avatar>
+                        </button>
+                    </div>
+                )}
             </nav>
         </>
     );

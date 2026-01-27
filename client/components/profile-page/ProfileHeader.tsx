@@ -86,13 +86,6 @@ export const ProfileHeader = ({ profile, isGettingProfile, setProfile, resetGame
                             <span className="ml-2 text-zinc-400 font-medium">Joined</span>
                         </span>
                     </div>
-
-                    {/* V2 FEATURE (FRIENDS) */}
-                    {/* <div className="flex items-center gap-2 border-l border-zinc-200 pl-6">
-                        <span className="text-[10px] font-bold uppercase tracking-widest">
-                            12 <span className="ml-1 text-zinc-400 font-medium">Friends</span>
-                        </span>
-                    </div> */}
                 </div>
             </div>
 

@@ -1,17 +1,22 @@
+"use client"
 import React from "react";
 
-const Loader = (): React.ReactElement => {
+const Loader = ({ message = "Loading..." }: {
+    message?: string
+}): React.ReactElement => {
     return (
-        <div className="loader">
-            <div className="square" id="sq1"></div>
-            <div className="square" id="sq2"></div>
-            <div className="square" id="sq3"></div>
-            <div className="square" id="sq4"></div>
-            <div className="square" id="sq5"></div>
-            <div className="square" id="sq6"></div>
-            <div className="square" id="sq7"></div>
-            <div className="square" id="sq8"></div>
-            <div className="square" id="sq9"></div>
+        <div className="flex flex-col text-center justify-center items-center gap-4">
+            <div className="dot-spinner">
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+                <div className="dot-spinner__dot"></div>
+            </div>
+            <p className="text-primary text-xs font-semibold ml-2">{message}</p>
         </div>
     );
 };

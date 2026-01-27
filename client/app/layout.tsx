@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
-import ContextsProvider from "@/providers/ContextsProvider";
 import ReduxProvider from "@/providers/ReduxProvider";
-import ThemeProvider from "@/providers/ThemeProvider";
-import ModalsProvider from "@/providers/ModalsProvider";
-import SocketProvider from "@/providers/SocketProvider";
+import ContextsProvider from "@/providers/ContextsProvider";
 import SonnerProvider from "@/providers/SonnerProvider";
+import SocketProvider from "@/providers/SocketProvider";
 
-
-// ===== Fonts ===== \\
-const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-sans' });
+const figtree = Figtree({ subsets: ['latin'], variable: '--font-sans' });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,37 +18,37 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// ===== Metadata ===== \\
 export const metadata: Metadata = {
   title: "SyncGrid — Real-Time Tic-Tac-Toe",
   description:
     "SyncGrid is a real-time multiplayer Tic-Tac-Toe game. Create or join matches, play live against others, and spectate ongoing games directly in the browser.",
 };
 
-// ===== Root layout ===== \\
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={jetbrainsMono.variable} suppressHydrationWarning>
+    <html lang="en" className={figtree.variable}>
+      <head>
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="TipJar" />
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider>
-          <ReduxProvider>
+        <ReduxProvider>
+          <ContextsProvider>
             <SonnerProvider>
-              <ContextsProvider>
-                <SocketProvider>
-                  <ModalsProvider>
-                    {children}
-                  </ModalsProvider>
-                </SocketProvider>
-              </ContextsProvider>
+              {children}
             </SonnerProvider>
-          </ReduxProvider>
-        </ThemeProvider>
+          </ContextsProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
