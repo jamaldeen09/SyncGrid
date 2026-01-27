@@ -7,7 +7,6 @@ import { clearAuth, setPartialAuth } from "@/redux/slices/user-slice";
 import { useAppDispatch } from "@/redux/store";
 import { ListenerCallbackArgs, SessionData } from "@shared/index";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { useUi } from "./UiContext";
 import Loader from "@/components/reusable/Loader";
 
 // Context's initial state type
@@ -31,9 +30,6 @@ export const MatchmakingContextProvider = ({ children }: {
     const [isFindingMatch, setIsFindingMatch] = useState<boolean>(false);
     const [isCancelingMatchmaking, setIsCancelingMatchmaking] = useState<boolean>(false);
     const dispatch = useAppDispatch();
-
-    // Hooks
-    const { openUi, closeUi } = useUi();
 
     // ===== Get session api service =====  \\
     const [getSession, {

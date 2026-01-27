@@ -117,12 +117,12 @@ const LoginPage = () => {
 
                                 {/* ===== Password field ===== */}
                                 <div className="space-y-1.5">
-                                    {/* ====== Forgot password for later ===== */}
-
-                                    {/* <div className="flex justify-between items-center ml-1">
+                                    <div className="flex justify-between items-center ml-1">
                                         <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Password</label>
-                                        <Link href="/forgot" className="text-[9px] text-zinc-300 hover:text-emerald-600 transition-colors uppercase font-bold">Forgot?</Link>
-                                    </div> */}
+
+                                        {/* ====== Forgot password for later ===== */}
+                                        {/* <Link href="/forgot" className="text-[9px] text-zinc-300 hover:text-emerald-600 transition-colors uppercase font-bold">Forgot?</Link> */}
+                                    </div>
 
                                     <Controller
                                         name="password"

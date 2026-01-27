@@ -16,9 +16,7 @@ export const events = {
     gameEnded: "game:ended",
     bannerUpdate: "banner:update",
     statusUpdate: "status:update",
-    lostStatus: "status:lost",
-    wonStatus: "status:won",
-    drawStatus: "status:draw",
+    forfeitGame: "game:forfeit",
 
     // ===== live game ===== \\
     getLiveGame: "live:game"

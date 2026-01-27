@@ -15,7 +15,7 @@ import { mountGameJanitor } from './services/game-play.service.js';
 const app: Application = express(); 
 
 // Server instance (created on top of the express app) 
-const server = http.createServer(app);   
+const server = http.createServer(app);    
  
 // Global express middlewares  
 app.use(express.json());
@@ -23,7 +23,7 @@ app.use(cors({
     origin:[envData.LOCAL_HOST_URL, envData.FRONTEND_URL],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
 })); 
-   
+    
 // Socket.io initialization (ws)
         
 // Config    

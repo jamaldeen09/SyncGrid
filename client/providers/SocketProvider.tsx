@@ -65,7 +65,7 @@ const SocketProvider = ({ children }: {
     useEffect(() => {
         // Manually connects when this component mounts
         if (!socket.connected) socket.connect()
-
+ 
         // ===== Connection ===== \\
         socket.on("connect", onConnection);
         socket.on("disconnect", onDisconnection);

@@ -6,7 +6,6 @@ import useMutationService from "../useMutationService";
 import { ApiResponse } from "@/lib/types/api";
 import { useLoginMutation } from "@/redux/apis/auth-api";
 import { SessionData, UiProfileType } from "@shared/index";
-import { callToast } from "@/providers/SonnerProvider";
 import { useRouter } from "next/navigation";
 
 // Schema type
@@ -48,7 +47,6 @@ const useLogin = () => {
             // ===== Actions ===== \\
             dispatch(setAuth(data));
             dispatch(setProfile(data.profile));
-            callToast.success(res.message);
             router.push("/");
         },
     });

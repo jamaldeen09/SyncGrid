@@ -11,7 +11,7 @@ export const getGameController = async (req: Request, res: ConfiguredResponse) =
     // Game type
     let gameType = req.query.gameType as "live-game" | "finished-game";
     let userId = ""
-
+ 
     // Set the current users if only if the game is being used
     // as a live game
     if (gameType === "live-game") userId = ((req as ConfiguredRequest).accessTokenPayload).userId;

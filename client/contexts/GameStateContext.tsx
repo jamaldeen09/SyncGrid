@@ -85,7 +85,6 @@ export const GameStateContextProvider = ({ children }: {
         }
     }, [fetchGame]);
 
-
     // UseEffect to set game data if .unwrap() logic somehow gets bypassed
     useEffect(() => {
         if (isSuccess) {
@@ -302,7 +301,7 @@ export const GameStateContextProvider = ({ children }: {
         getLiveGame,
         isSuccess,
         gameStatus,
-        liveGameFetchErrMsg
+        liveGameFetchErrMsg,
     ])
     return (
         <GameStateContext.Provider value={contextValues}>

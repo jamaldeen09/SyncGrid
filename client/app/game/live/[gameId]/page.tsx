@@ -1,5 +1,5 @@
 "use client"
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Timer } from "lucide-react";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { useAppSelector } from "@/redux/store";
 import socket from "@/lib/socket/socket";
 import { events } from "@/lib/socket/events";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const GamePage = (): React.ReactElement => {
     // Local states
@@ -19,7 +20,10 @@ const GamePage = (): React.ReactElement => {
     const [displayTimes, setDisplayTimes] = useState({ p1: 0, p2: 0 });
 
     // Global user id state
-    const userId = useAppSelector((state) => state.user.auth.userId)
+    const userId = useAppSelector((state) => state.user.auth.userId);
+
+    // AppRouter
+    const router = useRouter();
 
     // Hooks
     const {
@@ -142,6 +146,8 @@ const GamePage = (): React.ReactElement => {
                     setGameStatus={setGameStatus}
                     gameStatus={gameStatus}
                     resetBoard={resetBoard}
+                    router={router}
+                    gameId={gameData._id}
                 />)}
 
                 {/* ===== Header ===== */}
@@ -223,16 +229,6 @@ const GamePage = (): React.ReactElement => {
                         </div>
                     </div>
                 </main>
-
-                {/* ===== Footer (action bar) ===== */}
-                <footer className="flex justify-center items-center gap-6 mt-4">
-                    <Button
-                        variant="outline"
-                        className="rounded-none h-10 px-6 text-[10px] font-black uppercase tracking-widest border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-600"
-                    >
-                        Forfeit
-                    </Button>
-                </footer>
             </div>
         )
     );

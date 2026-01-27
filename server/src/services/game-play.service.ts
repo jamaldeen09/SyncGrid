@@ -66,7 +66,7 @@ async function terminateGame(
 
                 // Delete the game key that was used to get players data from redis
                 await redisService.deleteOperation(`game:${game._id}`);
- 
+
                 // Prepare and emit the payload to the frontend
                 payload["message"] = "Game canceled due to inactivity"
 
@@ -103,7 +103,7 @@ async function terminateGame(
 
             // Update the winner's win streak and their best streak
             // Reset the current users win streak back to 0 as well
-            if (game.winner) { 
+            if (game.winner) {
                 // Update the winner
                 const winner = await userService.updateUser<{
                     _id: mongoose.Types.ObjectId;

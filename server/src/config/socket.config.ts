@@ -140,10 +140,10 @@ export const initSocket = (io: Server) => {
         // Listens for status updates for instantaneous ui update
         socketService.newListener<{
             status: "won" | "lost" | "draw" | "canceled";
-            gameId: string;
+            gameId: string; 
         }>(events.statusUpdate,
             (args) => gamePlayService.statusUpdateForOpponent(args, socketService)
-        )
+        );
     });
 }
 

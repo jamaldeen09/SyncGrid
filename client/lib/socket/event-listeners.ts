@@ -77,7 +77,6 @@ export const onMoveRegistered = (payload: {
     currentTurn: "X" | "O";
     players: LiveGame["players"];
     winner: string | null;
-    serverTime: number;
 }, setLiveGameData: React.Dispatch<React.SetStateAction<LiveGame | null>>,
     fillBoard: (args: { value: "X" | "O"; boardLocation: number }[]) => void,
     setGameStatus: GameStateContextInitialState["setGameStatus"],

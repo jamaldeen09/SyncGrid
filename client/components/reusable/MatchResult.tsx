@@ -5,27 +5,23 @@ import { ArrowRight, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 type ResultStatus = "won" | "lost" | "draw" | "canceled" | "active";
 
 interface MatchResultProps {
     gameStatus: ResultStatus;
     setGameStatus: React.Dispatch<React.SetStateAction<ResultStatus>>
-    onClose?: () => void;
     resetBoard: () => void;
+    router: AppRouterInstance;
+    gameId: string;
 }
 
-const MatchResult = ({ gameStatus, onClose, setGameStatus, resetBoard }: MatchResultProps) => {
+const MatchResult = ({ gameStatus, setGameStatus, resetBoard, router, gameId }: MatchResultProps) => {
     const [showActions, setShowActions] = useState(false);
-    const router = useRouter();
 
     useEffect(() => {
         if (gameStatus !== "active") {
-            // Sound trigger (optional)
-            // const audio = new Audio(`/sounds/${gameStatus}.mp3`);
-            // audio.volume = 0.3;
-            // audio.play().catch(() => {});
-
             const timer = setTimeout(() => setShowActions(true), 2000);
             return () => clearTimeout(timer);
         }
@@ -120,12 +116,12 @@ const MatchResult = ({ gameStatus, onClose, setGameStatus, resetBoard }: MatchRe
                                     className="w-full rounded-none border-4 border-zinc-900 font-black uppercase text-xs h-14 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none transition-all">
                                     <Home size={16} className="mr-2" /> Exit
                                 </Button>
-                                <Button
-                                    onClick={onClose}
-                                    className="w-full rounded-none bg-zinc-900 text-white border-4 border-zinc-900 font-black uppercase text-xs h-14 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:bg-zinc-800 transition-all active:translate-x-0.5 active:translate-y-0.5"
-                                >
-                                    Board <ArrowRight size={16} className="ml-2" />
-                                </Button>
+                                <Link href={`/game/finished/${gameId}`}>
+                                    <Button
+                                        className="w-full rounded-none bg-zinc-900 text-white border-4 border-zinc-900 font-black uppercase text-xs h-14 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:bg-zinc-800 transition-all active:translate-x-0.5 active:translate-y-0.5"
+                                    >
+                                        Board <ArrowRight size={16} className="ml-2" />
+                                    </Button></Link>
                             </motion.div>
                         )}
                     </div>
