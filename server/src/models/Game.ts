@@ -53,7 +53,7 @@ const GameSchema = new Schema<IGameDocument, IGameModel>({
 
     result: {
         type: String,
-        enum: ["decisive", "draw", "abandoned", "pending"],
+        enum: ["decisive", "draw", "pending"],
         default: "pending",
         lowercase: true,
         trim: true,

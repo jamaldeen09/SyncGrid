@@ -14,7 +14,7 @@ export interface GameData {
         preference: "X" | "O";
         username: string;
     }[];
-    requestedUserInGameStatus: "Won" | "Loss" | "Draw"; 
+    requestedUserInGameStatus: "Won" | "Loss" | "Draw";
     finishedAt: string;
     moves: number;
 }
@@ -22,18 +22,21 @@ export interface GameData {
 
 export interface GamesPayload {
     totalPages: number;
-    totalGames: number;  
+    totalGames: number;
     page: number;
     limit: number;
     games: GameData[];
 }
- 
+
 export interface LiveGame {
     _id: string;
     timeLeftTillGameCanceledMs: number; // this is useful if no one played after x seconds (in my case 20 seconds) then we cancel the game
-    status: "active" | "finished";
+    status: "active" | "finished" | "canceled";
     winner: string | null; // the userId of the person that won the game
     currentTurn: "X" | "O" // this decides who's turn it is to play
+    result: "decisive" | "draw" | "pending";
+    lastMoveAt: number | null;
+    createdAt: Date;
 
     // ===== Players ===== \\
     players: {
@@ -56,7 +59,7 @@ export interface LiveGame {
         boardLocation: number;
     }[];
 };
-  
+
 
 export interface GetGamesData {
     // ===== Filters ===== \\
@@ -71,18 +74,35 @@ export interface GetGamesData {
 };
 
 
-export interface FinishedGameData {
+export interface ActiveOrFinishedGameData {
     _id: string;
     players: {
         userId: string;
         username: string;
         profileUrl: string;
         currentWinStreak: number;
-        preference: "X" | "O"
+        preference: "X" | "O";
     }[];
+    status: "finished" | "active";
     moves: {
         playedBy: string; // users Id
         value: "X" | "O";
         boardLocation: number;
     }[];
 }
+
+export interface NewMoveArgs {
+    gameId: string;
+    winner: string | null;
+    moveData: {
+        value: "X" | "O";
+        boardLocation: number
+    }
+}
+
+export interface LiveGameForBanner {
+    _id: string;
+    players: ({ userId: string; preference: "X" | "O" })[]
+    currentTurn: "X" | "O" | null;
+    moves: ({ boardLocation: number; value: "X" | "O" })[];
+};

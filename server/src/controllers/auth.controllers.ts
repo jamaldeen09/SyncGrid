@@ -3,16 +3,10 @@ import { LoginCredentials, SignupCredentials, SessionData,  UiProfileType } from
 import { Request } from 'express';
 import { createToken, serverError } from '../services/auth.services.js';
 import { ConfiguredRequest, ConfiguredResponse } from '../types/api.types.js';
-import { UserService } from '../services/user.service.js';
 import { LoginLean, SessionLean } from '../types/auth.types.js';
-import { RedisService } from '../services/redis.service.js';
 import { ExistsQueryLean } from '../types/db-service.types.js';
-
-// User service 
-const userService = new UserService();
-
-// Redis service
-const redisService = new RedisService()
+import { userService } from '../services/user.service.js';
+import { redisService } from '../services/redis.service.js';
 
 export const signupController = async (req: Request, res: ConfiguredResponse) => {
     // Extract validated signup credentials attached to request
@@ -58,7 +52,7 @@ export const signupController = async (req: Request, res: ConfiguredResponse) =>
         const profileData: UiProfileType = {
             profileUrl: newUser.profileUrl,
             username: newUser.username,
-            currentWinStreak: newUser.currentWinStreak,
+            bio: newUser.bio,
         }
 
         return res.status(201).json({
@@ -124,7 +118,7 @@ export const loginController = async (req: Request, res: ConfiguredResponse) => 
         const profileData: UiProfileType = {
             username: user.username,
             profileUrl: user.profileUrl,
-            currentWinStreak: user.currentWinStreak,
+            bio: user.bio,
         }
 
         return res.status(200).json({

@@ -7,8 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileType } from "@shared/index";
 import { useAppSelector } from "@/redux/store";
 import Link from "next/link";
-import { Settings, UserPlus, ArrowLeft, Globe } from "lucide-react";
-import { toast } from "sonner";
+import { Settings, ArrowLeft, Globe } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // ===== Profile Header Skeleton ===== \\
 export const ProfileHeaderSkeleton = (): React.ReactElement => {
@@ -41,14 +41,14 @@ export const ProfileHeader = ({ profile, isGettingProfile, setProfile, resetGame
 }): React.ReactElement => {
     // Hooks
     const { userId } = useAppSelector((state) => state.user.auth);
+    const router = useRouter();
 
     // ===== Useful booleans ===== \\
     const isOwner = profile?.userId === userId;
-    const isOnline = profile?.status === "online";
     return (
         <div className="flex flex-col md:flex-row gap-8 items-center bg-white p-6 border border-zinc-200 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.03)] relative overflow-hidden">
-            {/* ===== Status Accent Line ===== */}
-            <div className={`absolute top-0 left-0 w-full h-1 ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}`} />
+            {/* ===== Status Accent Line (V2) ===== */}
+            {/* <div className={`absolute top-0 left-0 w-full h-1 ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}`} /> */}
 
             {/* ===== Square Avatar Section ===== */}
             <div className="relative shrink-0">
@@ -100,7 +100,7 @@ export const ProfileHeader = ({ profile, isGettingProfile, setProfile, resetGame
             <div className="flex flex-row md:flex-col gap-2 w-full md:w-auto">
                 {!isGettingProfile && profile && (
                     <>
-                        {isOwner ? (
+                        {isOwner && (
                             <Link href="/profile/edit">
                                 <Button
                                     variant="outline"
@@ -109,31 +109,21 @@ export const ProfileHeader = ({ profile, isGettingProfile, setProfile, resetGame
                                     <Settings size={14} className="mr-2" /> Edit profile
                                 </Button>
                             </Link>
-                        ) : (
-                            <Button
-                                onClick={() => toast.info("This feature is currently unavailable")}
-                                variant="outline"
-                                className="flex-1 md:flex-none rounded-none border-zinc-900 bg-zinc-900 text-white hover:bg-emerald-600 hover:border-emerald-600 text-[10px] font-black uppercase tracking-widest h-9"
-                            >
-                                <UserPlus size={14} className="mr-2" /> Add friend
-                            </Button>
                         )}
                     </>
                 )}
 
-
-                <Link href="/">
-                    <Button
-                        onClick={() => {
-                            resetGameFetchState();
-                            setProfile(null);
-                        }}
-                        variant="outline"
-                        className="flex-1 md:flex-none w-full rounded-none border-zinc-200 text-zinc-500 hover:text-zinc-900 text-[10px] font-black uppercase tracking-widest h-9"
-                    >
-                        <ArrowLeft size={14} className="mr-2" /> Exit
-                    </Button>
-                </Link>
+                <Button
+                    onClick={() => {
+                        resetGameFetchState();
+                        setProfile(null);
+                        setTimeout(() => router.push("/"), 100)
+                    }}
+                    variant="outline"
+                    className="flex-1 md:flex-none w-full rounded-none border-zinc-200 text-zinc-500 hover:text-zinc-900 text-[10px] font-black uppercase tracking-widest h-9"
+                >
+                    <ArrowLeft size={14} className="mr-2" /> Exit
+                </Button>
             </div>
         </div>
     );

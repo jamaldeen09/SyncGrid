@@ -1,6 +1,7 @@
 
 import AuthProvider from '@/providers/AuthProvider';
 import PublicProfileProvider from '@/providers/PublicProfileProvider';
+import SocketProvider from '@/providers/SocketProvider';
 import * as React from 'react'
 
 const ProfileLayout = ({ children, params }: {
@@ -15,7 +16,9 @@ const ProfileLayout = ({ children, params }: {
             <PublicProfileProvider
                 username={username}
             >
-                {children}
+                <SocketProvider>
+                    {children}
+                </SocketProvider>
             </PublicProfileProvider>
         </AuthProvider>
     );

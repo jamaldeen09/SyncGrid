@@ -2,11 +2,8 @@ import { NextFunction, Request } from "express";
 import { matchedData, validationResult } from "express-validator"
 import { ConfiguredRequest, ConfiguredResponse, ExtendedValidationError } from "../types/api.types.js";
 import { serverError, validateToken } from "../services/auth.services.js";
-import { UserService } from "../services/user.service.js";
+import { userService } from "../services/user.service.js";
 import { AccessTokenPayload, RefreshTokenPayload } from "src/types/auth.types.js";
-
-// User service
-const userService = new UserService();
 
 export const processValidationMiddleware = async (req: Request, res: ConfiguredResponse, next: NextFunction) => {
     try {

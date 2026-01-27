@@ -7,7 +7,6 @@ export type ProfileLean = {
     createdAt: Date;
     updatedAt: Date;
     bio: string | null;
-    status: "offline" | "online";
     bestWinStreak: number;
 } | null;
 

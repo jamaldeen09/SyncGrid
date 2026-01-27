@@ -23,7 +23,7 @@ const initialState: UserType = {
     profile: {
         username: "",
         profileUrl: "",
-        currentWinStreak: 0,
+        bio: "",
     }
 };
 
@@ -72,18 +72,18 @@ export const userSlice = createSlice({
             }
         },
 
-        setProfile: (state, action: PayloadAction<UserType["profile"]>) => {
-            state.profile = {
-                ...state.profile,
-                ...action.payload
-            }
+        setProfile: (state, action: PayloadAction<Partial<UserType["profile"]>>) => {
+            // ===== Update the users profile conditionally ===== \\
+            if (action.payload.bio) state.profile.bio = action.payload.bio;
+            if (action.payload.profileUrl) state.profile.profileUrl = action.payload.profileUrl
+            if (action.payload.username) state.profile.username = action.payload.username
         },
 
         clearProfile: (state) => {
             state.profile = {
                 profileUrl: "",
                 username: "",
-                currentWinStreak: 0,
+                bio: ""
             }
         }
     }

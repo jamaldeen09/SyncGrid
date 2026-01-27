@@ -1,5 +1,6 @@
 import mongoose, { Model, Document, AnyKeys, AnyObject } from "mongoose";
 import { DbQuery, MongoCrud, Query } from "../types/db-service.types.js";
+import { GetGamesData } from "@shared/index.js";
 
 
 export class DatabaseService {
@@ -14,24 +15,37 @@ export class DatabaseService {
             const bulkQuery = model.find(args.query).select(args.selectFields || "");
 
             if (args.paginationConfig) {
-                if (args.paginationConfig.sortOrder) {
-                    bulkQuery.sort({ 
-                        createdAt: args.paginationConfig.sortOrder === "oldest_to_newest" ? 1 : -1 
-                    })
+                const direction = args.paginationConfig.sortOrder === "oldest_to_newest" ? 1 : -1;
+                let sortDefinition: any = {};
+            
+                if (args.paginationConfig.sortFields && args.paginationConfig.sortFields.length > 0) {
+                    args.paginationConfig.sortFields.forEach((field) => {
+                        sortDefinition[field] = direction;
+                    });
                 } else {
-                    bulkQuery.sort({ createdAt: -1 })
+                    // Fallback if no fields provided
+                    sortDefinition.createdAt = direction;
                 }
-
+            
+                // Secondary sort for stability
+                sortDefinition._id = direction;
+            
+                console.log("APPLYING SORT:", sortDefinition); // VERIFY THIS LOGS { finishedAt: -1, _id: -1 }
+            
+                // Re-assign to ensure the chain is preserved
+                bulkQuery.sort(sortDefinition);
+                
+                // Skip and Limit must come AFTER sort
                 bulkQuery.skip(args.paginationConfig.offset).limit(args.paginationConfig.limit);
             }
- 
+
             if (args.populateOptions) {
                 bulkQuery.populate(args.populateOptions);
             }
 
             return await bulkQuery.lean<LeanGeneric>().exec();
         }
- 
+
         // ===== Single Document Logic ===== 
         if (!args.optionConfig) return null;
 
@@ -76,19 +90,20 @@ export class DatabaseService {
 
             if (args.optionConfig.option === "via-id" && args.id) {
 
+                // Pipeline updates
                 query = model.findByIdAndUpdate(
-                    args.id, 
+                    args.id,
                     args.updateQuery,
-                    { new: true },
+                    { new: true, updatePipeline: Array.isArray(args.updateQuery) },
                 ).select(args.selectFields || "");
-
             } else if (args.optionConfig.option === "via-query") {
 
+                // Handle pipeline updates
                 query = model.findOneAndUpdate(
                     args.filterQuery,
-                    args.updateQuery
+                    args.updateQuery,
+                    { new: true, updatePipeline: Array.isArray(args.updateQuery) },
                 ).select(args.selectFields || "");
-
             } else {
                 return null
             }
@@ -101,15 +116,15 @@ export class DatabaseService {
             return await query.lean<LeanGeneric>().exec()
         } else {
             if (!args.filterQuery) return null;
-            await model.updateOne((args.filterQuery), args.updateQuery)
+            await model.updateOne((args.filterQuery), args.updateQuery, {
+                updatePipeline: Array.isArray(args.updateQuery)
+            })
         }
-
-        return null
     };
 
     // ===== Delete's a document ===== \\
     async deleteDoc<TDoc extends Document, LeanGeneric>(
-        model: Model<TDoc>, 
+        model: Model<TDoc>,
         args: MongoCrud["delete"]
     ) {
         let query: DbQuery<TDoc> = null;

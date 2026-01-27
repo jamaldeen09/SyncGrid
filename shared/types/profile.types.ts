@@ -7,13 +7,13 @@ export interface ProfileType {
     totalGamesPlayed: number;
     bestWinStreak: number;
     bio: string | null;
-    status: "offline" | "online";
+    winRate: number;
 };
 
 export interface UiProfileType {
     profileUrl: string;
     username: string;
-    currentWinStreak: number;
+    bio: string;
 }
 
 export interface EditProfileData {

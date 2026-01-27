@@ -23,6 +23,7 @@ export type LoginLean = {
     profileUrl: string;
     username: string;
     currentWinStreak: number;
+    bio: string;
 } | null
 
 export type SessionLean = {

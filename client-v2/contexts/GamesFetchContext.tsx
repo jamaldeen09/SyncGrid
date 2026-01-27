@@ -40,31 +40,7 @@ export interface GameFetchContextInitialState {
 
 
 // ===== Actual Context ===== \\
-export const GamesFetchContext = createContext<GameFetchContextInitialState>({
-    // ===== Filters ===== \\
-    filters: { page: 1, limit: 10 },
-    addFilter: () => { },
-    clearFilters: () => { },
-
-    // ===== Games fetch result ===== \\
-    gamesFetchResult: null,
-    resetGameFetchState: () => { },
-
-    // ===== Goes to next page ===== \\
-    goToNextPage: () => { },
-
-    // ===== Api service ===== \\
-    apiService: {
-        executeService: async () => { },
-        isLoading: false,
-        isSuccess: false,
-        error: undefined,
-        isError: false,
-        isFetching: false,
-        data: undefined
-    },
-});
-
+export const GamesFetchContext = createContext<GameFetchContextInitialState | null>(null);
 
 // ===== Context provider ===== \\
 export const GamesFetchContextProvider = ({ children }: {
@@ -141,34 +117,37 @@ export const GamesFetchContextProvider = ({ children }: {
 
     // ===== useEffect to handle the operation  ===== \\
     useEffect(() => {
-        let isMounted = true;
-
-        if (isSuccess && data && isMounted) {
+        if (isSuccess && data) {
             const expectedData = data.data as GamesPayload;
 
-            // If page > 1, handle the merging logic
-            if (expectedData.page > 1 && gamesFetchResult) {
-                const combinedGames = [...gamesFetchResult.games, ...expectedData.games];
-                const uniqueGames = Array.from(
-                    new Map(combinedGames.map(item => [item._id, item])).values()
-                );
+            // If it's page 1, we replace the whole state
+            if (expectedData.page === 1) {
+                setGamesFetchResult(expectedData);
+            }
+            // If it's page > 1, we merge
+            else if (expectedData.page > 1) {           
+                setGamesFetchResult((prev) => {
+                    if (!prev) return expectedData;
 
-                setGamesFetchResult((prevState) => ({
-                    ...(prevState as GamesPayload),
-                    ...expectedData,
-                    games: uniqueGames,
-                }));
+                    const combinedGames = [...prev.games, ...expectedData.games];
+
+                    // Remove duplicates by ID
+                    const uniqueGames = Array.from(
+                        new Map(combinedGames.map(item => [item._id, item])).values()
+                    );
+
+                    return {
+                        ...expectedData,
+                        games: uniqueGames,
+                    };
+                });
             }
         }
 
-        if (isError && error && "data" in error && isMounted) {
+        if (isError && error && "data" in error) {
             callToast.error(extractErrorMessage(error));
         }
-
-        return () => {
-            isMounted = false;
-        };
-    }, [isSuccess, data, isError, error, gamesFetchResult]);
+    }, [isSuccess, data, isError, error]);
 
     // Context Values
     const contextValues = useMemo((): GameFetchContextInitialState => ({
@@ -206,7 +185,7 @@ export const GamesFetchContextProvider = ({ children }: {
         error,
         data,
         isSuccess,
-        resetGameFetchState,
+        goToNextPage,
     ]);
     return (
         <GamesFetchContext.Provider value={contextValues}>

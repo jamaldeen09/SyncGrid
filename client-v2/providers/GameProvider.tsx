@@ -1,55 +1,54 @@
 "use client"
-import Navbar from "@/components/main-page/Navbar";
 import ErrorCard from "@/components/reusable/ErrorCard";
 import Loader from "@/components/reusable/Loader";
+import { useGameState } from "@/contexts/GameStateContext";
 import useApiServiceHelper from "@/hooks/useApiServiceHelper";
 import { ApiResponse } from "@/lib/types/api";
-import { useGetGameQuery } from "@/redux/apis/game-api";
-import { setFinishedGame } from "@/redux/slices/game-slice";
-import { useAppDispatch } from "@/redux/store";
-import { FinishedGameData } from "@shared/index";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-const GameProvider = ({ children, gameId }: {
+const GameProvider = ({ children, gameId, gameType }: {
     children: React.ReactNode;
     gameId: string;
+    gameType: "live-game" | "finished-game";
 }) => {
+    // Local states
+    const [showLoadingUi, setShowLoadingUi] = useState<boolean>(true);
+
     // Hooks
     const { extractErrorMessage, extractValidationErrors } = useApiServiceHelper();
 
 
-    // AppDispatch
-    const dispatch = useAppDispatch();
-
-    // ===== Api service ===== \\
+    // Custom hooks
     const {
-        isLoading,
-        isSuccess,
-        isFetching,
-        data,
-        error,
-        isError
-    } = useGetGameQuery({ gameId });
+        gameFetchApiService: {
+            executeService,
+            isLoading,
+            isFetching,
+            isSuccess,
+            error,
+            isError
+        },
+    } = useGameState();
 
     // Decisive boolean to show load state
     const isGettingGame = isLoading || isFetching;
 
+    // Use Effect responsible for triggering the http request
+    // to the backend when this component mounts
     useEffect(() => {
-        let isMounted = true;
-        if (isMounted && isSuccess) {
-            console.log("DATA RECEIVED: ", data);
-            dispatch(setFinishedGame((data.data as { game: FinishedGameData }).game));
-        }
+        executeService(gameId, gameType)
+    }, [gameId, gameType]);
 
-        return () => {
-            isMounted = false
-        }
-    }, [isSuccess, dispatch]);
+    // Use effect to set the boolean responsible for showing
+    // a loading ui to false
+    useEffect(() => {
+        if (isSuccess || (isError && error)) setShowLoadingUi(false)
+    }, [isSuccess, isError, error])
 
     // Loading state
-    if (isGettingGame)
+    if (isGettingGame || showLoadingUi)
         return (
-            <div className="flex justify-center items-center">
+            <div className="flex justify-center items-center h-screen">
                 <Loader />
             </div>
         );
@@ -57,34 +56,42 @@ const GameProvider = ({ children, gameId }: {
     // Error ui
     if (error && isError && "data" in error) {
         const message = extractErrorMessage(error);
-        const validationErrors = extractValidationErrors(error);
+        const validationErrors = extractValidationErrors(error)
 
         return (
-            <div className="flex h-screen flex-col">
-                <Navbar fixed={false} />
-                <div className="flex-1 flex items-center justify-center">
-                    {(error.status === 404) ? (
-                        <ErrorCard
-                            messageHeader="Game Not Found"
-                            messageDescription="The match you're looking for doesn't exist or is ongoing"
-                        />
-                    ) : (error.status === 403) ? (
-                        <ErrorCard
-                            messageHeader="Access denied"
-                            messageDescription={message}
-                        />
-                    ) : ((error.status === 400) && (validationErrors.length >= 1)) ? (
-                        <ErrorCard
-                            messageHeader="Validation error"
-                            messageDescription="Please provide a valid game id"
-                        />
-                    ) : (
-                        <ErrorCard
-                            messageHeader="Failed to fetch game"
-                            messageDescription={message}
-                        />
-                    )}
-                </div>
+            <div className="flex h-screen justify-center items-center">
+                {(error.status === 404) ? (
+                    <ErrorCard
+                        messageHeader="Game Not Found"
+                        messageDescription="The match you're looking for doesn't exist or is ongoing"
+                        statusCode={404}
+                    />
+                ) : (error.status === 400 && (error.data as ApiResponse).error?.code === "VALIDATION_ERROR") ? (
+                    <ErrorCard
+                        messageHeader="Validation failed"
+                        messageDescription={(
+                            `${validationErrors.length >= 1 ? (
+                                `Validation error |
+                                ${validationErrors.map((err) => {
+                                    return `${err.message}`
+                                })}`
+                            ) : message}`
+                        )}
+                        statusCode={400}
+                    />
+                ) : (error.status === 403) ? (
+                    <ErrorCard
+                        messageHeader="Access denied"
+                        messageDescription={message}
+                        statusCode={403}
+                    />
+                ) : (
+                    <ErrorCard
+                        messageHeader="Failed to fetch game"
+                        messageDescription={message}
+                        statusCode={500}
+                    />
+                )}
             </div>
         )
     }

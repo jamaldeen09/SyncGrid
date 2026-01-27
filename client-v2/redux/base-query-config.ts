@@ -2,6 +2,7 @@ import { ApiResponse } from "@/lib/types/api";
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { clearAuth, clearProfile } from "./slices/user-slice";
+import { callToast } from "@/providers/SonnerProvider";
 
 // ===== Base query ===== \\
 export const baseQuery = fetchBaseQuery({
@@ -30,11 +31,14 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
 
     if (result.error && result.error.status === 401 && (result.error.data as ApiResponse).error?.code === "AUTHENTICATION_ERROR") {
         const refreshToken = localStorage.getItem("refreshToken");
+        console.log("CONDITION HAS BEEN SUCCESSFULLY PASSED CHECKING FOR RESFRESH TOKEN BEFORE PROCEEDING: ", refreshToken)
 
         if (!refreshToken) {
             api.dispatch(clearAuth());
             return result;
         }
+
+        console.log("REFRESH TOKEN EXISTS MOVING ON TO MAKING HTTP REQUEST!")
 
         // Attempt to refresh the token
         const refreshResult = await baseQuery(
@@ -47,7 +51,8 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
             extraOptions,
         );
 
-        console.log("Refresh result: ", refreshResult);
+        console.log("==== REFRESH RESULT FROM BASE QUERY =====: ", refreshResult);
+        console.log("==== REFRESH RESULT DATA FROM BASE QUERY CONFIG =====: ", refreshResult.data)
 
         if (refreshResult.data) {
             const typedResult = (refreshResult.data as ApiResponse).data as { token: string };
@@ -61,6 +66,7 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
             // If refresh fails, wipe the state
             api.dispatch(clearAuth());
             api.dispatch(clearProfile());
+            callToast.error("Session has expired, please log in to continue");
         }
     }
 

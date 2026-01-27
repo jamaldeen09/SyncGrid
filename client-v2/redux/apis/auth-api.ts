@@ -34,12 +34,17 @@ export const authApi = createApi({
         getSession: builder.query<ApiResponse, void>({
             query: () => "/auth/session"
         }),
+
+        refresh: builder.query<ApiResponse, void>({
+            query: () => `/auth/refresh`
+        })
     }),
 });
 
 export const {
     useSignupMutation,
     useLoginMutation,
-    useGetSessionQuery,
     useLogoutMutation,
+    useLazyGetSessionQuery,
+    useLazyRefreshQuery,
 } = authApi

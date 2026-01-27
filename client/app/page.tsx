@@ -26,6 +26,8 @@ const MainPage = (): React.ReactElement => {
             {/* Public games section */}
             <PublicGamesSection />
           </main>
+
+          <MatchResult />
         </div>
       </PrivateProfileProvider>
     </AuthProvider>

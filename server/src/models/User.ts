@@ -5,7 +5,6 @@ export interface IUser {
     _id: mongoose.Types.ObjectId;
     email: string;
     bio: string;
-    status: "online" | "offline";
     passwordHash: string;
     username: string;
     profileUrl: string;
@@ -60,14 +59,6 @@ const UserSchema = new Schema<IUserDocument, IUserModel>({
         maxLength: 50,
         trim: true,
         default: "Hi there im using syncgrid"
-    },
-
-    status: {
-        type: String,
-        trim: true,
-        lowercase: true,
-        enum: ["offline", "online"],
-        default: "offline"
     },
 
     profileUrl: {

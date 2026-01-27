@@ -6,8 +6,17 @@ import { Button } from "../ui/button";
 import { useAppSelector } from "@/redux/store";
 import useLogout from "@/hooks/auth/useLogout";
 import Loader from "../reusable/Loader";
+import { useUi } from "@/contexts/UiContext";
+import { useEffect, useState } from "react";
+import { useBannerLiveGame } from "@/contexts/BannerLiveGameContext";
 
 const Navbar = (): React.ReactElement => {
+    const { bannerLiveGameId } = useBannerLiveGame();
+
+
+    // Ui context hook
+    const ui = useUi().ui;
+
     // Global state to determine if the current user is authenticated
     const isAuthenticated = useAppSelector((state) => state.user.auth.isAuthenticated);
 
@@ -27,7 +36,7 @@ const Navbar = (): React.ReactElement => {
             icon: <Gamepad2 size={18} />,
             isLink: true,
             includeValue: true,
-            route: "/profile?tab=games"
+            route: `/profile/${profile.username}`
         },
         {
             id: 2,
@@ -63,7 +72,7 @@ const Navbar = (): React.ReactElement => {
                 </div>
 
                 {/* Unauthenticated Actions */}
-                {!isAuthenticated && (
+                {(!isAuthenticated) && (
                     <div className="flex items-center gap-2 sm:gap-3">
                         <Button
                             variant="ghost"
@@ -83,7 +92,7 @@ const Navbar = (): React.ReactElement => {
                 )}
 
                 {/* Authenticated Actions */}
-                {isAuthenticated && (
+                {(isAuthenticated) && (
                     <div className="flex items-center gap-3 sm:gap-8">
                         <div className="flex items-center gap-3 sm:gap-4 border-r border-zinc-200 pr-3 sm:pr-8">
                             {navActionButtons.map((btn) => (
@@ -96,8 +105,10 @@ const Navbar = (): React.ReactElement => {
                                             {btn.icon}
                                         </Link>
 
-                                        {btn.includeValue && (
-                                            <div className="w-3 h-3 flex justify-center items-center text-[8px] text-white rounded-full bg-primary absolute -bottom-0.5 -right-1">1</div>
+                                        {(btn.includeValue) && (
+                                            bannerLiveGameId !== null && (
+                                                <div className="w-3 h-3 flex justify-center items-center text-[8px] text-white rounded-full bg-primary absolute -bottom-0.5 -right-1">1</div>
+                                            )
                                         )}
                                     </div>
                                 ) : (
@@ -110,8 +121,10 @@ const Navbar = (): React.ReactElement => {
                                             {btn.icon}
                                         </button>
 
-                                        {btn.includeValue && (
-                                            <div className="w-3 h-3 flex justify-center items-center text-[8px] text-white rounded-full bg-primary absolute -bottom-0.5 -right-1">1</div>
+                                        {(btn.includeValue) && (
+                                            bannerLiveGameId !== null && (
+                                                <div className="w-3 h-3 flex justify-center items-center text-[8px] text-white rounded-full bg-primary absolute -bottom-0.5 -right-1">1</div>
+                                            )
                                         )}
                                     </div>
                                 )

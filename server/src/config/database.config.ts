@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { envData } from "./env.config.js";
 import { Game } from "../models/Game.js";
-import { User } from "../models/User.js";
+import { testData } from "../data/test-data.js";
 
 
 // Connects to mongodb with infinite retry upon any error
@@ -19,12 +19,15 @@ export const initDb = async () => {
             // await User.updateMany({}, {
             //     $set: { bio: "Hi there im using syncgrid", status: "offline" }
             // })
+
+
+            // await Game.insertMany(testData)
             console.log("***** Successfully connected to mongoDb *****");
             return connection;
-        } catch (err) { 
-            retries++   
+        } catch (err) {
+            retries++
             console.log(`***** Mongo connection error *****\n${err}`);
-    
+
             if (retries < Infinity) {
                 console.log(`Retrying in ${delayMs / 1000}s`);
                 await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -34,4 +37,5 @@ export const initDb = async () => {
             }
         }
     }
-}  
+}
+

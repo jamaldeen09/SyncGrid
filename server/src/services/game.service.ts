@@ -43,3 +43,7 @@ export class GameService {
         return await databaseService.countDoc<IGameDocument>(Game, query);
     }
 }
+
+export const gameService = new GameService();
+
+// ** 

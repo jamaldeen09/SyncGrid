@@ -1,52 +1,150 @@
 import { Server } from "socket.io";
-import { GamePlayService,  MatchmakingService, SocketService } from "../services/socket.service.js";
+import { SocketService } from "../services/socket.service.js";
 import { events } from "../lib/events.js";
-
+import { MatchmakingService } from "../services/matchmaking.service.js";
+import { LiveGame, NewMoveArgs } from "@shared/index.js";
+import { GamePlayService } from "src/services/game-play.service.js";
+import jwt from "jsonwebtoken"
+import { envData } from "./env.config.js";
+import { AccessTokenPayload } from "../types/auth.types.js";
+import { ConfiguredSocket } from "../types/socket.types.js";
+import { redisService } from "src/services/redis.service.js";
 
 export const initSocket = (io: Server) => {
-    return io.on("connection", (socket) => {
+
+    // Global middlewares
+    io.use((socket, next) => {
+        let errorObj: ({ name: string; message: string; }) | undefined;
+        const token = socket.handshake.auth.token;
+
+        // Token does not exist
+        if (!token) {
+            errorObj = ({
+                name: "AUTHENTICATION_ERROR",
+                message: "Token missing",
+            });
+
+            return next(errorObj);
+        }
+
+
+        // Verify the provided token
+        jwt.verify(token, envData.ACCESS_TOKEN_SECRET, (err: unknown, decoded: unknown) => {
+            if (err instanceof jwt.TokenExpiredError) {
+                errorObj = ({
+                    name: "EXPIRED_TOKEN",
+                    message: "Token has expired"
+                });
+
+                return next(errorObj)
+            }
+
+            if (err instanceof jwt.JsonWebTokenError) {
+                errorObj = ({
+                    name: "INVALID_TOKEN",
+                    message: "Invalid token"
+                });
+
+                return next(errorObj)
+            }
+
+            const typedDecoded = decoded as AccessTokenPayload;
+            (socket as ConfiguredSocket).user = ({
+                userId: typedDecoded.userId,
+                tokenVersion: typedDecoded.tokenVersion,
+                email: typedDecoded.email,
+            });
+
+            return next();
+        });
+    });
+
+    io.on("connection", (socket) => {
         // Socket service
         const socketService = new SocketService(io, socket);
 
         // Matchmaking service
-        const matchmakingService = new MatchmakingService(io, socket);
+        const matchmakingService = new MatchmakingService(socket);
 
         // Game play service
         const gamePlayService = new GamePlayService(io, socket);
 
-        console.log("SOCKET.ID: ", socket.id)
+        // ** ===== LISTENERS ===== ** \\
 
-        socket.on("connect", () => {
-            console.log("RECEIVED A NEW CONNECTION: ", socket.id);
-        });
+        // ** CONNECTION AND DISCONNECTION
+        console.log("Received a new connection");
+        console.log("Connection's sid: ", socket.id);
 
-        socket.on("disconnection", (args: {
-            userId: string
-        }) => {
+        socket.on("disconnect", async () => {
+            try {
+                const userId = (socket as ConfiguredSocket).user.userId;
 
-        });
+                await Promise.allSettled([
+                    redisService.deleteOperation(`searching:${userId}`),
+                    redisService.deleteOperation(`user-socket:${userId}`),
+                    redisService.matchmakingQueueOperation(events.matchmakingQueue.X, "remove", userId),
+                    redisService.matchmakingQueueOperation(events.matchmakingQueue.O, "remove", userId)
+                ]);
 
-        // ===== Finds an opponent for the requesting user ===== \
+                console.log(`Connection with sid: ${socket.id} has disconnected`);
+            } catch (err) {
+                console.error("Disconnection err: ", err);
+            }
+        })
+
+        // ** MATCHMAKING
+
+        // Listens for requests to find an opponent
         socketService.newListener<{
-            userId: string,
             preference: "X" | "O",
-        }>(events.findOpponent, (args, callback) => matchmakingService.findOpponent(args, callback));
+        }>(events.findOpponent, (args, callback) => matchmakingService.findOpponent(({
+            ...args,
+            socketService,
+        }), callback));
 
-        // ===== Listens for requests to get a live game ===== \\
+        // Listens for requests to cancel the search for an opponent
+        socketService.newListener<{
+            preference: "X" | "O"
+        }>(events.cancelMatchmaking, (args, callback) => matchmakingService.cancelOpponentSearch(({
+            ...args,
+            socketService
+        }), callback));
+
+
+        // ** GAME PLAY
+
+        // Listnes for requests to get the live data of a game
+        socketService.newListener<{ gameId: string }>(events.getLiveGame,
+            (args, callback) => gamePlayService.getLiveGame({
+                ...args,
+                socketService,
+            }, callback));
+
+
+        // Listens for requests to make a new move in a game
+        socketService.newListener<NewMoveArgs>(
+            events.newMove,
+            (args, callback) => gamePlayService.newMove(({
+                ...args,
+                socketService,
+            }), callback)
+        );
+
+        // Listens for requests to get banner live game
         socketService.newListener<{
             gameId: string
-        }>(events.getLiveGame, (args, callback) => gamePlayService.getLiveGame(args, callback));
+        }>(events.bannerLiveGame,
+            (args, callback) => gamePlayService.getBannerLiveGame(args, callback)
+        )
 
-        // ===== New move ===== \\
+        // Listens for status updates for instantaneoud ui update
         socketService.newListener<{
+            status: "won" | "lost" | "draw" | "canceled";
             gameId: string;
-            userId: string;
-            winner: string | null;
-            moveData: {
-                value: "X" | "O";
-                boardLocation: number
-            }
-        }>(events.newMove, (args, callback) => gamePlayService.newMove(args, callback))
+        }>(events.statusUpdate,
+            (args) => gamePlayService.statusUpdateForOpponent(args, socketService)
+        )
+
     });
 }
 

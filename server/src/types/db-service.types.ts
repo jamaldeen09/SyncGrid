@@ -26,7 +26,8 @@ export interface MongoCrud <TCreate = unknown, TDoc = unknown>{
         paginationConfig?: {
             limit: number;
             offset: number;
-            sortOrder?: "newest_to_oldest" | "oldest_to_newest"
+            sortOrder?: "newest_to_oldest" | "oldest_to_newest";
+            sortFields?: string[];
         };
         optionConfig?: OptionConfig
         query?: Query;
@@ -37,7 +38,6 @@ export interface MongoCrud <TCreate = unknown, TDoc = unknown>{
         updateQuery: UpdateQuery<TDoc>;
         filterQuery?: Query;
         returnUpdatedDoc: boolean;
-
         optionConfig?: OptionConfig;
         id?: string;
     } & MongoDbExtraType;

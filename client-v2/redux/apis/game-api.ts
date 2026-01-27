@@ -59,8 +59,12 @@ export const gameApi = createApi({
             }
         }),
 
-        getGame: builder.query<ApiResponse, { gameId: string }>({
-            query: ({ gameId }) => `/game/${gameId}`
+        getGame: builder.query<ApiResponse, { gameId: string; gameType: "live-game" | "finished-game" }>({
+            query: ({ gameId, gameType }) => `/game/${gameId}?gameType=${gameType}`
+        }),
+
+        getBannerLiveGameId: builder.query<ApiResponse, void>({
+            query: () => `/banner/game`
         })
     }),
 });
@@ -69,5 +73,6 @@ export const {
     useCreateGameMutation,
     useUpdateGameMutation,
     useLazyGetGamesQuery,
-    useGetGameQuery
+    useLazyGetGameQuery,
+    useLazyGetBannerLiveGameIdQuery,
 } = gameApi

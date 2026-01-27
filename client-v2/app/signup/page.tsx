@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import useSignup from "@/hooks/auth/useSignup";
+import { FieldError } from "@/components/ui/field";
 
 const SignupPage = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -46,7 +47,7 @@ const SignupPage = () => {
                     </Link>
 
                     <Link href="/login" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors">
-                       Log In
+                        Log In
                     </Link>
                 </div>
             </header>
@@ -98,12 +99,15 @@ const SignupPage = () => {
                                     <Controller
                                         name="username"
                                         control={signupForm.control}
-                                        render={({ field }) => (
-                                            <Input
-                                                {...field}
-                                                placeholder="e.g. grid_runner"
-                                                className="rounded-none border-zinc-200 focus-visible:ring-emerald-500 h-12 bg-zinc-50/30 text-xs transition-all"
-                                            />
+                                        render={({ field, fieldState }) => (
+                                            <div>
+                                                <Input
+                                                    {...field}
+                                                    placeholder="e.g john-doe"
+                                                    className={`rounded-none border-zinc-200 focus-visible:border-transparent ${fieldState.error ? "focus-visible:ring-red-500" : "focus-visible:ring-emerald-500"} h-12 bg-zinc-50/30 text-xs transition-all`}
+                                                />
+                                                {fieldState.invalid && (<FieldError className="text-[10px] text-red-500 font-bold uppercase tracking-tighter mt-2" errors={[fieldState.error]} />)}
+                                            </div>
                                         )}
                                     />
                                 </div>
@@ -114,13 +118,17 @@ const SignupPage = () => {
                                     <Controller
                                         name="email"
                                         control={signupForm.control}
-                                        render={({ field }) => (
-                                            <Input
-                                                {...field}
-                                                type="email"
-                                                placeholder="user@domain.com"
-                                                className="rounded-none border-zinc-200 focus-visible:ring-emerald-500 h-12 bg-zinc-50/30 text-xs transition-all"
-                                            />
+                                        render={({ field, fieldState }) => (
+                                            <div>
+                                                <Input
+                                                    {...field}
+                                                    type="email"
+                                                    placeholder="user@domain.com"
+                                                    className={`rounded-none border-zinc-200 focus-visible:border-transparent ${fieldState.error ? "focus-visible:ring-red-500" : "focus-visible:ring-emerald-500"} h-12 bg-zinc-50/30 text-xs transition-all`}
+                                                />
+                                                {fieldState.invalid && (<FieldError className="text-[10px] text-red-500 font-bold uppercase tracking-tighter mt-2" errors={[fieldState.error]} />)}
+                                            </div>
+
                                         )}
                                     />
                                 </div>
@@ -128,27 +136,36 @@ const SignupPage = () => {
                                 {/* ===== Password field ===== */}
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Password</label>
-                                    <div className="relative">
-                                        <Controller
-                                            name="password"
-                                            control={signupForm.control}
-                                            render={({ field }) => (
+                                    <Controller
+                                        name="password"
+                                        control={signupForm.control}
+                                        render={({ field, fieldState }) => (
+                                            <div className="flex flex-col gap-2 relative">
                                                 <Input
                                                     {...field}
                                                     type={showPassword ? "text" : "password"}
                                                     placeholder="••••••••"
-                                                    className="rounded-none border-zinc-200 focus-visible:ring-emerald-500 h-12 bg-zinc-50/30 text-xs pr-12 transition-all"
+                                                    className={`rounded-none border-zinc-200 focus-visible:border-transparent ${fieldState.error ? "focus-visible:ring-red-500" : "focus-visible:ring-emerald-500"} h-12 bg-zinc-50/30 text-xs pr-12 transition-all`}
                                                 />
-                                            )}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-300 hover:text-zinc-900 transition-colors"
-                                        >
-                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                    </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-4 top-4.5 h-fit flex items-center justify-center text-zinc-300 hover:text-zinc-900 transition-colors"
+                                                >
+                                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        className="text-[10px] text-red-500 font-bold uppercase tracking-tighter"
+                                                        errors={[fieldState.error]}
+                                                    />
+                                                )}
+                                            </div>
+                                        )}
+                                    />
                                 </div>
                             </div>
 

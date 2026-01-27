@@ -3,10 +3,10 @@ import z from "zod"
 import useMutationService from "../useMutationService";
 import { ApiResponse } from "@/lib/types/api";
 import { useEditProfileMutation } from "@/redux/apis/profile-api";
-import { useUi } from "@/contexts/UiContext";
 import { callToast } from "@/providers/SonnerProvider";
-import { useProfileFetch } from "@/contexts/ProfileFetchContext";
-import { ProfileType } from "@shared/index";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/redux/store";
+import { setProfile } from "@/redux/slices/user-slice";
 
 // Schema type
 export type EditProfileSchemaType = z.ZodObject<{
@@ -31,16 +31,11 @@ export const editProfileSchema = z.object({
     profileFile: z.file().optional()
 });
 
-// Hook args type
-interface UseEditProfileArgs {
-    profile: ProfileType | null;
-    getProfile: (username: string) => Promise<void>;
-    getCurrentUsersProfile: () => Promise<void>;
-}
-
-const useEditProfile = (args: UseEditProfileArgs) => {
+// Hook
+const useEditProfile = () => {
     // Hooks
-    const { closeUi } = useUi();
+    const router = useRouter();
+    const dispatch = useAppDispatch();
 
     // Service
     const editProfileService = useMutationService<ApiResponse, typeof editProfileSchema.shape>({
@@ -48,13 +43,22 @@ const useEditProfile = (args: UseEditProfileArgs) => {
         schema: editProfileSchema,
         contextName: "useEditProfile",
         onSuccess: async (res) => {
-            // Close ui and call toast
-            closeUi("editProfile");
-            callToast.success(res.message)
+            callToast.success(res.message);
+            const data = res.data as ({
+                updateData: ({
+                    username?: string;
+                    bio?: string;
+                    profileUrl?: string;
+                })
+            });
 
-            // Refetch the current user's profile to reflect changes
-            args.getProfile(args.profile?.username || "");
-            args.getCurrentUsersProfile();
+            // Route the user to their profile page to view updates
+            // (or home page if they somehow bypass logic to prevent updates if)
+            // (no update data exists)
+
+            // Set the global profile state to have instant effect in the ui
+            dispatch(setProfile(data.updateData));
+            if (data.updateData.username) router.push(`/profile/${data.updateData.username}`);
         },
     });
 

@@ -8,12 +8,13 @@ import { Server } from 'socket.io';
 import { authRouter } from './routes/auth.routes.js';
 import { profileRouter } from './routes/profile.routes.js';
 import { initSocket } from './config/socket.config.js';
-import { gameRouter } from './routes/game.routes.js';
+import { gameRouter } from './routes/game.routes.js'; 
+import { mountGameJanitor } from './services/game-play.service.js';
 
 // Express app
 const app: Application = express(); 
 
-// Server instance (created on top of the express app)
+// Server instance (created on top of the express app) 
 const server = http.createServer(app);   
  
 // Global express middlewares  
@@ -24,16 +25,18 @@ app.use(cors({
 })); 
    
 // Socket.io initialization (ws)
-  
-// Config
-const io = new Server(server, {
+        
+// Config    
+const io = new Server(server, {  
     cors: {
         origin: [envData.LOCAL_HOST_URL, envData.FRONTEND_URL]
     },
     connectionStateRecovery: {
-        maxDisconnectionDuration: 12000 // 2 minutes before attempting to reconnect 
-    }
-});
+        maxDisconnectionDuration: 20000 // 25 seconds
+    }  
+}); 
+ 
+
 
 // initialization
 initSocket(io);
@@ -42,15 +45,21 @@ initSocket(io);
 const dbConnection = await initDb(); 
    
 // Redis initialization;  
-await initRedis();   
-   
+await initRedis();    
+
+// Game janitor
+mountGameJanitor(io);
+    
 // Routes 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1", profileRouter);
 app.use("/api/v1", gameRouter);
 
-// Listens for a port (if redis and database are connected)
-if (dbConnection && redisClient.isReady) server.listen(envData.PORT, () => console.log(`Server is running on: ${envData.HOST_URL}`));
-  
 
-    
+// Listens for a port (if redis and database are connected)
+if (dbConnection && redisClient.isReady) {
+    server.listen(envData.PORT, () => console.log(`Server is running on: ${envData.HOST_URL}`));
+}
+
+
+  

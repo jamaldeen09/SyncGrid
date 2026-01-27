@@ -1,4 +1,5 @@
 import AuthProvider from "@/providers/AuthProvider";
+import SocketProvider from "@/providers/SocketProvider";
 import UnauthenticatedRouteProvider from "@/providers/UnauthenticatedRouteProvider";
 import React from "react";
 
@@ -8,7 +9,9 @@ const LoginLayout = ({ children }: {
   return (
     <AuthProvider>
       <UnauthenticatedRouteProvider>
-        {children}
+        <SocketProvider>
+          {children}
+        </SocketProvider>
       </UnauthenticatedRouteProvider>
     </AuthProvider>
   );

@@ -1,12 +1,11 @@
 import { NextFunction, Request } from 'express';
 import { serverError } from '../services/auth.services.js';
-import { GameService } from '../services/game.service.js';
+import { gameService } from '../services/game.service.js';
 import { ConfiguredRequest, ConfiguredResponse } from '../types/api.types.js';
 import { ExistsQueryLean } from '../types/db-service.types.js';
 import { IGame } from '../models/Game.js';
 
-// Game service
-const gameService = new GameService()
+
 
 export const checkForInQueueGameMiddleware = async (req: Request, res: ConfiguredResponse, next: NextFunction) => {
     const { userId } = (req as ConfiguredRequest).accessTokenPayload;

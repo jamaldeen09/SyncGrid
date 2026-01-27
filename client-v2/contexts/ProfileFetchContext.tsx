@@ -24,24 +24,7 @@ interface ProfileFetchContextType {
 };
 
 // Actual context
-export const ProfileFetchContext = createContext<ProfileFetchContextType>({
-
-    // Local profile state
-    profile: null,
-    setProfile: () => { },
-
-    // Helpers
-
-    // Api service
-    apiService: {
-        isLoading: false,
-        isFetching: false,
-        isSuccess: false,
-        isError: false,
-        error: undefined,
-        executeService: async () => { },
-    }
-});
+export const ProfileFetchContext = createContext<ProfileFetchContextType | null>(null);
 
 // Context provider
 export const ProfileFetchContextProvider = ({ children }: {

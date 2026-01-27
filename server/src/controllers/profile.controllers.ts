@@ -1,22 +1,12 @@
 import { Request } from 'express';
-import { ApiResponsePayload, ConfiguredRequest, ConfiguredResponse } from '../types/api.types.js';
+import { ConfiguredRequest, ConfiguredResponse } from '../types/api.types.js';
 import { serverError } from '../services/auth.services.js';
-import { UserService } from '../services/user.service.js';
-import { RedisService } from '../services/redis.service.js';
+import { userService } from '../services/user.service.js';
+import { redisService } from '../services/redis.service.js';
 import { ProfileLean } from '../types/profile.types.js';
-import { GameService } from '../services/game.service.js';
+import { gameService } from '../services/game.service.js';
 import { ProfileType, UiProfileType } from '@shared/index.js';
 import mongoose from 'mongoose';
-
-// User service
-const userService = new UserService();
-
-// Redis service  
-const redisService = new RedisService();
-
-// Gaem service
-const gameService = new GameService();
-
 
 export const getProfileController = async (req: Request, res: ConfiguredResponse) => {
     // Extract the desired profile's username
@@ -44,7 +34,7 @@ export const getProfileController = async (req: Request, res: ConfiguredResponse
                         ]
                     }
                 },
-                selectFields: "createdAt updatedAt profileUrl username bestWinStreak bio status"
+                selectFields: "createdAt updatedAt profileUrl username bestWinStreak bio"
             }) as ProfileLean;
 
             // User was not found
@@ -61,13 +51,32 @@ export const getProfileController = async (req: Request, res: ConfiguredResponse
             // Get the total amount of games won by the user
             const totalGamesWon = await gameService.countGameDocs({
                 "players.userId": user._id,
+                "result": { $in: ["decisive"] },
+                "gameSettings.status": { $in: ["finished"] },
                 winner: user._id
+            });
+
+            // Get the total amount of games drawn by the user
+            const totalGamesDrew = await gameService.countGameDocs({
+                "players.userId": user._id,
+                "result": { $in: ["draw"] },
+                "gameSettings.status": { $in: ["finished"] },
+                winner: null,
             });
 
             // Get the total number of games a user has played
             const totalGamesPlayed = await gameService.countGameDocs({
-                "players.userId": user._id
-            })
+                "players.userId": user._id,
+                "result": { $in: ["decisive", "draw"] },
+                "gameSettings.status": { $in: ["finished"] }
+            });
+
+            // Get the users win rate
+            let winRate = 0;
+            if (totalGamesPlayed > 0) {
+                const rawRate = ((totalGamesWon + (totalGamesDrew * 0.5)) / totalGamesPlayed) * 100;
+                winRate = Math.round(rawRate * 10) / 10;
+            }
 
             // Profile data
             let profileData: ProfileType = {
@@ -79,7 +88,7 @@ export const getProfileController = async (req: Request, res: ConfiguredResponse
                 profileUrl: user.profileUrl,
                 createdAt: user.createdAt.toISOString(),
                 bio: user.bio,
-                status: user.status
+                winRate,
             };
 
             // Cache the user in redis
@@ -88,10 +97,8 @@ export const getProfileController = async (req: Request, res: ConfiguredResponse
             return res.status(200).json({
                 success: true,
                 message: "User's profile has been fetched successfully",
-                data: {
-                    profile: profileData
-                }
-            })
+                data: ({ profile: profileData })
+            });
         } else {
             // ===== Cache hit ===== \\
             return res.status(200).json({
@@ -131,7 +138,7 @@ export const getRequestingUserProfileController = async (req: Request, res: Conf
                     option: "via-id"
                 },
                 id: userId,
-                selectFields: "username profileUrl currentWinStreak"
+                selectFields: "username profileUrl bio"
             }) as (UiProfileType & {
                 _id: mongoose.Types.ObjectId
             });
@@ -150,7 +157,7 @@ export const getRequestingUserProfileController = async (req: Request, res: Conf
             const profileData = {
                 username: user.username,
                 profileUrl: user.profileUrl,
-                currentWinStreak: user.currentWinStreak,
+                bio: user.bio
             };
 
             await redisService.writeOperation<UiProfileType>(key, profileData, 300);
@@ -182,17 +189,17 @@ export const editProfileController = async (req: Request, res: ConfiguredRespons
     const updateData = (req as ConfiguredRequest).data as { bio?: string; username?: string; };
     const profileUrl = (req as ConfiguredRequest).profileUrl;
 
+    // Update query
+    let updateQuery: {
+        username?: string;
+        bio?: string;
+        profileUrl?: string;
+    } = { ...updateData };
+
     // Boolean to determine if the requesting user is eligible for an update
-    const isEligibleForUpdate = Object.keys(updateData).length >= 1 || profileUrl
+    const isEligibleForUpdate = Object.keys(updateData).length >= 1 || profileUrl;
     try {
         if (isEligibleForUpdate) {
-            // Update query
-            let updateQuery: {
-                username?: string;
-                bio?: string;
-                profileUrl?: string;
-            } = {...updateData};
-
             // Conditionally add profile url
             if (profileUrl) updateQuery["profileUrl"] = profileUrl;
 
@@ -209,6 +216,7 @@ export const editProfileController = async (req: Request, res: ConfiguredRespons
             }) as {
                 _id: mongoose.Types.ObjectId
                 username: string;
+
             } | null;
 
             if (!user)
@@ -222,22 +230,20 @@ export const editProfileController = async (req: Request, res: ConfiguredRespons
                 });
 
 
-            // Delete cache key
+            // Delete cache keys
             const firstKey = `private-profile:${user._id}`;
             const secondKey = `public-profile:${user.username}`;
 
             // Delete both private and public cache keys
             await redisService.deleteOperation(firstKey);
-            await redisService.deleteOperation(secondKey)
+            await redisService.deleteOperation(secondKey);
         };
 
-        // Response obj being sent to frontend
-        let responseJSON: ApiResponsePayload = {
+        return res.status(200).json({
             success: true,
             message: "Your profile has been updated successfully",
-        };
-
-        return res.status(200).json(responseJSON);
+            data: { updateData: updateQuery }
+        });
     } catch (err) {
         console.error(`Profile update error\nFile: profile.controllers.ts\nController: editProfileController\n${err}`);
         serverError(res, "A server error occured while trying to update your profile, please try again shortly", err);

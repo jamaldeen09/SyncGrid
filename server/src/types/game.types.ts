@@ -20,7 +20,7 @@ export type BulkGamesLean = {
 
 
 
-export type FinishedGameLean = {
+export type ActiveOrFinishedGameLean = {
     _id: mongoose.Types.ObjectId;
     players: {
         preference: "X" | "O"
@@ -33,4 +33,18 @@ export type FinishedGameLean = {
     }[];
     gameSettings: IGame["gameSettings"];
     moves: IGame["moves"]
+} | null
+
+
+export type LiveGameForBannerLean = ({
+    _id: mongoose.Types.ObjectId;
+    players: IGame["players"];
+    moves: IGame["moves"];
+}) | null;
+
+
+export type GameBeingTerminated = {
+    _id: mongoose.Types.ObjectId;
+    players: IGame["players"];
+    winner: mongoose.Types.ObjectId | null;
 } | null

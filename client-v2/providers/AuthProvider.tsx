@@ -1,19 +1,22 @@
 "use client"
 import Loader from "@/components/reusable/Loader";
-import { useGetSessionQuery } from "@/redux/apis/auth-api";
+import { useLazyGetSessionQuery } from "@/redux/apis/auth-api";
 import { setPartialAuth } from "@/redux/slices/user-slice";
 import { useAppDispatch } from "@/redux/store";
 import { SessionData } from "@shared/index";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 const AuthProvider = ({ children }: {
   children: React.ReactNode
 }): React.ReactElement => {
 
+  // Local states
+  const [showLoadingUi, setShowLoadingUi] = useState<boolean>(true);
+
   // Pathname
   const pathname = usePathname();
-  const isAuthRoute = pathname === "/login" || pathname === "/signup"
+  const isAuthRoute = pathname === "/login" || pathname === "/signup";
 
   // AppRouterInstance
   const router = useRouter();
@@ -21,48 +24,73 @@ const AuthProvider = ({ children }: {
   // AppDispatch
   const dispatch = useAppDispatch();
 
+
   // ===== Api service ===== \\
-  const {
+  const [getSession, {
     isLoading,
     isFetching,
     data,
     isSuccess,
     error,
     isError
-  } = useGetSessionQuery();
+  }] = useLazyGetSessionQuery();
   const isPending = isLoading || isFetching;
 
-  useEffect(() => {
-    let isMounted = true;
+  // Function that makes the http request to the backend
+  const executeService = useCallback(async () => {
+    try {
+      const result = await getSession().unwrap();
+      if (result && result.data) {
+        setShowLoadingUi(false);
+        dispatch(
+          setPartialAuth(
+            result.data as SessionData
+          )
+        );
 
+        if ((pathname === "/login" || pathname === "/signup")) router.push("/")
+      }
+    } catch (err) {
+      setShowLoadingUi(false)
+    }
+  }, [getSession]);
+
+
+  // ===== UseEffect to trigger the http request ===== \\
+  useEffect(() => {
+    executeService();
+  }, []);
+
+  // ===== UseEffect to update the current user's session data (if .unwrap() gets bypassed) ===== \\
+  useEffect(() => {
     // Initialize auth
-    if (isSuccess && isMounted) {
+    if (isSuccess) {
+      setShowLoadingUi(false);
+
       dispatch(
         setPartialAuth(
           data.data as SessionData
         )
       );
 
-      if ((pathname === "/login" || pathname === "/signup")) router.push("/")
+      if (isAuthRoute) router.push("/")
     };
 
-    if (error && isError && isMounted) {
-
+    if (isError && error) {
+      setShowLoadingUi(false);
+      if (!isAuthRoute) router.push("/")
     }
+  }, [isSuccess, data, error, isError]);
 
-    return () => {
-      isMounted = false;
-    }
-  }, [isSuccess, data, dispatch, error, isError, router]);
 
-  // Prevent showing ui if this operation is on going
-  if (isPending && !isAuthRoute) return (
+  useEffect(() => console.log("conditions: ", (showLoadingUi || isPending) && !isAuthRoute));
+  if ((showLoadingUi || isPending) && !isAuthRoute) return (
     <div className="flex justify-center items-center h-screen">
       <Loader />
     </div>
   );
 
-  if (isPending && isAuthRoute) return (<></>);
+  if ((showLoadingUi || isPending) && isAuthRoute) return (<></>);
   return <>{children}</>
 };
 

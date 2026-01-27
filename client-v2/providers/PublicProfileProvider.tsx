@@ -1,9 +1,6 @@
 "use client"
-import Navbar from "@/components/main-page/Navbar";
 import { useProfileFetch } from "@/contexts/ProfileFetchContext";
-import React, { useEffect } from "react";
-import AuthProvider from "./AuthProvider";
-import PrivateProfileProvider from "./PrivateProfileProvider";
+import React, { useEffect, useState } from "react";
 import Loader from "@/components/reusable/Loader";
 import ErrorCard from "@/components/reusable/ErrorCard";
 
@@ -11,6 +8,9 @@ const PublicProfileProvider = ({ children, username }: {
     children: React.ReactNode;
     username: string;
 }): React.ReactElement => {
+    // Is getting public profile
+    const [showLoadingUi, setShowLoadingUi] = useState<boolean>(true);
+
     // Hooks
     const { apiService: {
         executeService,
@@ -18,27 +18,31 @@ const PublicProfileProvider = ({ children, username }: {
         isFetching,
         error,
         isError,
+        isSuccess,
     } } = useProfileFetch();
 
     // Fetch the current user's profile once this component mounts
     useEffect(() => {
         if (!username) return;
-
-        console.log("USE EFFECT TO TRIGGER PROFILE FETCH RAN!")
         executeService(username);
     }, [username]);
+
+    useEffect(() => {
+        if (isSuccess) setShowLoadingUi(false);
+        if (isError && error) setShowLoadingUi(false);
+    }, [isSuccess, error, isError])
 
     // Is pending
     const isPending = isLoading || isFetching
 
     // Load state 
-    if (isPending) return (
+    if (isPending || showLoadingUi) return (
         <div className="flex h-screen justify-center items-center">
             <Loader />
         </div>
     );
 
-    if (error && isError && "data" in error && !isPending) {
+    if (error && isError && "data" in error) {
         // Error status
         const status = typeof error.status === "number" ? error.status : 400;
 
@@ -67,25 +71,18 @@ const PublicProfileProvider = ({ children, username }: {
         };
 
         // Header and description
-        const { 
-            header, 
-            description 
+        const {
+            header,
+            description
         } = getErrorMessage(status);
         return (
-            <AuthProvider>
-                <PrivateProfileProvider>
-                    <div className="flex h-screen flex-col bg-[#F8F8F8]">
-                        <Navbar />
-                        <div className="flex-1 flex items-center justify-center p-6">
-                            <ErrorCard
-                                messageHeader={header}
-                                messageDescription={description}
-                                statusCode={status}
-                            />
-                        </div>
-                    </div>
-                </PrivateProfileProvider>
-            </AuthProvider>
+            <div className="h-screen flex items-center justify-center p-6 bg-[#F8F8F8]">
+                <ErrorCard
+                    messageHeader={header}
+                    messageDescription={description}
+                    statusCode={status}
+                />
+            </div>
         );
     }
 
