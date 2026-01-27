@@ -4,7 +4,6 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { userSlice } from "./slices/user-slice";
 import { authApi } from "./apis/auth-api";
 import { gameApi } from './apis/game-api';
-import { gameSlice } from './slices/game-slice';
 
 // Redux store
 export const store = configureStore({
@@ -12,7 +11,6 @@ export const store = configureStore({
     reducer: {
         // Slice's
         user: userSlice.reducer,
-        game: gameSlice.reducer,
 
         // Api's
         [authApi.reducerPath]: authApi.reducer,

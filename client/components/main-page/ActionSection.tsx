@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "../ui/button";
-import { Loader2, } from "lucide-react"; // Added icons
+import { Loader2, } from "lucide-react";
 
 interface ActionSectionProps {
     isFindingMatch: boolean;
@@ -44,8 +44,7 @@ const ActionSection = ({
                     <Button
                         disabled={!isFindingMatch || isCancelingMatchmaking}
                         onClick={cancelSearch}
-                        className="w-full h-20 bg-white border-4 border-red-600 text-red-600 hover:bg-red-50 rounded-none text-lg font-bold shadow-[8px_8px_0px_0px_rgba(220,38,38,1)] transition-all active:translate-x-1 active:translate-y-1 active:shadow-none uppercase tracking-tighter flex flex-col gap-0
-                        "
+                        className="w-full h-20 bg-white border-4 border-red-600 text-red-600 hover:bg-red-50 rounded-none text-lg font-bold shadow-[8px_8px_0px_0px_rgba(220,38,38,1)] transition-all active:translate-x-1 active:translate-y-1 active:shadow-none uppercase tracking-tighter flex flex-col gap-0"
                     >
                         <div className="flex items-center gap-2">
                             <Loader2 size={20} className="animate-spin" />
@@ -55,10 +54,13 @@ const ActionSection = ({
                 )}
 
                 <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
-                    <span>Avg Queue: 12s</span>
-                    <span className={`${isFindingMatch ? 'animate-pulse text-red-500' : 'text-emerald-600'}`}>
-                        ● {isFindingMatch ? 'In Queue' : '1,024 Online'}
-                    </span>
+                    <span>Avg Queue: 20s</span>
+
+                    {isFindingMatch && (
+                        <span className="animate-pulse text-red-500">
+                            ● In queue
+                        </span>
+                    )}
                 </div>
             </div>
         </section >

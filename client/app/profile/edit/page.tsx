@@ -84,8 +84,6 @@ const EditProfilePage = (): React.ReactElement => {
         if ((values.bio) && (values.bio?.toLowerCase() !== profile.bio.toLowerCase())) payload["bio"] = values.bio;
         if (profileFile) payload["profileFile"] = profileFile;
 
-        console.log("EDIT PROFILE PAYLOAD: ", payload)
-
         // Make http request
         await executeService(payload);
     };

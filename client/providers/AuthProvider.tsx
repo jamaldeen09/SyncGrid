@@ -82,8 +82,6 @@ const AuthProvider = ({ children }: {
     }
   }, [isSuccess, data, error, isError]);
 
-
-  useEffect(() => console.log("conditions: ", (showLoadingUi || isPending) && !isAuthRoute));
   if ((showLoadingUi || isPending) && !isAuthRoute) return (
     <div className="flex justify-center items-center h-screen">
       <Loader />

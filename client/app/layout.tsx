@@ -4,7 +4,6 @@ import "./globals.css";
 import ReduxProvider from "@/providers/ReduxProvider";
 import ContextsProvider from "@/providers/ContextsProvider";
 import SonnerProvider from "@/providers/SonnerProvider";
-import SocketProvider from "@/providers/SocketProvider";
 
 const figtree = Figtree({ subsets: ['latin'], variable: '--font-sans' });
 

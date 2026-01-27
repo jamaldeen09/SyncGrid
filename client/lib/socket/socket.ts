@@ -10,7 +10,6 @@ const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
     randomizationFactor: 0.5,
     timeout: 20000, // Wait x_ms for server responses
     auth: (cb) => {
-        // This function runs every time socket.connect() is called
         cb({ token: typeof window !== "undefined" ? localStorage.getItem("accessToken") : undefined });
     }
 })

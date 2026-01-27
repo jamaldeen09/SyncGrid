@@ -32,11 +32,15 @@ const SocketProvider = ({ children }: {
         fillBoard, 
         setGameStatus,
     } = useGameState();
+    const isAuthenticated = useAppSelector((state) => state.user.auth.isAuthenticated);
 
     // Current user id
     const currentUserId = useAppSelector((state) => state.user.auth.userId);
 
     // ** ===== WRAPPERS ===== ** \\
+
+    // Reconnection
+    const reconnectionAttempt = (attempt: number) => onReconnectionAttempt(attempt, isAuthenticated);
 
     // Matchmaking
     const foundOpponent = (args: { gameId: string }) => onFoundOpponent(args.gameId, router, setIsFindingMatch);
@@ -74,7 +78,7 @@ const SocketProvider = ({ children }: {
         socket.io.on("reconnect", onReconnection);
         socket.io.on("reconnect_error", onReconnectionError);
         socket.io.on("reconnect_failed", onReconnectionFailed);
-        socket.io.on("reconnect_attempt", onReconnectionAttempt);
+        socket.io.on("reconnect_attempt", reconnectionAttempt);
 
         // ====== Matchmaking ===== \\
         socket.on(events.foundOpponent, foundOpponent);
@@ -95,7 +99,7 @@ const SocketProvider = ({ children }: {
             socket.io.off("reconnect", onReconnection);
             socket.io.off("reconnect_error", onReconnectionError);
             socket.io.off("reconnect_failed", onReconnectionFailed);
-            socket.io.off("reconnect_attempt", onReconnectionAttempt);
+            socket.io.off("reconnect_attempt", reconnectionAttempt);
 
             // ===== Matchmaking ===== \\
             socket.off(events.foundOpponent, foundOpponent);

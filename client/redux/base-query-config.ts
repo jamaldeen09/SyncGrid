@@ -31,14 +31,11 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
 
     if (result.error && result.error.status === 401 && (result.error.data as ApiResponse).error?.code === "AUTHENTICATION_ERROR") {
         const refreshToken = localStorage.getItem("refreshToken");
-        console.log("CONDITION HAS BEEN SUCCESSFULLY PASSED CHECKING FOR RESFRESH TOKEN BEFORE PROCEEDING: ", refreshToken)
 
         if (!refreshToken) {
             api.dispatch(clearAuth());
             return result;
         }
-
-        console.log("REFRESH TOKEN EXISTS MOVING ON TO MAKING HTTP REQUEST!")
 
         // Attempt to refresh the token
         const refreshResult = await baseQuery(
@@ -50,9 +47,6 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
             api,
             extraOptions,
         );
-
-        console.log("==== REFRESH RESULT FROM BASE QUERY =====: ", refreshResult);
-        console.log("==== REFRESH RESULT DATA FROM BASE QUERY CONFIG =====: ", refreshResult.data)
 
         if (refreshResult.data) {
             const typedResult = (refreshResult.data as ApiResponse).data as { token: string };

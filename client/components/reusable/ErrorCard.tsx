@@ -9,7 +9,7 @@ const ErrorCard = ({ messageDescription, messageHeader, statusCode }: {
     statusCode: number
 }) => {
     return (
-        <div className="w-full max-w-xl bg-white border-2 border-zinc-900 shadow-[12px_12px_0px_0px_rgba(239,68,68,0.1)] overflow-hidden">
+        <div className="w-full max-w-sm sm:max-w-xl bg-white border-2 border-zinc-900 shadow-[12px_12px_0px_0px_rgba(239,68,68,0.1)] overflow-hidden">
             {/* Warning Header Strip */}
             <div className="bg-red-500 py-2 px-4 flex items-center justify-between border-b-2 border-zinc-900">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">

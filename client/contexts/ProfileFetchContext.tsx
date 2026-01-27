@@ -1,5 +1,4 @@
 "use client"
-import { callToast } from "@/providers/SonnerProvider";
 import { useLazyGetPublicProfileQuery } from "@/redux/apis/profile-api";
 import { SerializedError } from "@reduxjs/toolkit";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";

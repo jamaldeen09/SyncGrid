@@ -2,7 +2,6 @@ import { GameStateContextInitialState } from "@/contexts/GameStateContext";
 import { callToast } from "@/providers/SonnerProvider";
 import { LiveGame } from "@shared/index";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { toast } from "sonner";
 
 // ===== Connections ===== \\
 export const onConnection = () => {
@@ -26,9 +25,9 @@ export const onReconnection = (attempt: number) => {
 
 
 // ===== Reconnection attempt ===== \\
-export const onReconnectionAttempt = (attempt: number) => {
+export const onReconnectionAttempt = (attempt: number, isAuthenticated: boolean) => {
     console.log(`Attempting to reconnect...\nCurrent attempt: ${attempt}`);
-    callToast.reconnecting();
+    if (isAuthenticated) callToast.reconnecting();
 }
 
 // ===== Reconnection failed ===== \\
@@ -46,7 +45,6 @@ export const onFoundOpponent = (
     router: AppRouterInstance,
     setIsFindingMatch: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-    console.log("FOUND OPPONENT, GAME ID: ", gameId);
     setIsFindingMatch(false);
 
     // Route the user to the game

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ProfileHeader, ProfileHeaderSkeleton } from "@/components/profile-page/ProfileHeader";
 import { useProfileFetch } from "@/contexts/ProfileFetchContext";
 import { useGameFetch } from "@/contexts/GamesFetchContext";
-import { GetGamesData, LiveGame } from "@shared/index";
+import { GetGamesData } from "@shared/index";
 import GamesTable from "@/components/profile-page/GamesTable";
 import Selects from "@/components/profile-page/Selects";
 import { Spinner } from "@/components/ui/spinner";

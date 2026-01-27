@@ -1,9 +1,0 @@
-{
-    "name": "syncgrid-root",
-    "private": true,
-    "workspaces": [
-      "server",
-      "client",
-      "shared"
-    ]
-}

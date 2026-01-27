@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
 import { toast, Toaster } from "sonner";
-import { Loader2, Wifi, WifiOff } from "lucide-react";
+import { Wifi, WifiOff } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 /**

@@ -6,17 +6,11 @@ import { Button } from "../ui/button";
 import { useAppSelector } from "@/redux/store";
 import useLogout from "@/hooks/auth/useLogout";
 import Loader from "../reusable/Loader";
-import { useUi } from "@/contexts/UiContext";
-import { useEffect, useState } from "react";
 import { useBannerLiveGame } from "@/contexts/BannerLiveGameContext";
 import Logo from "../reusable/Logo";
 
 const Navbar = (): React.ReactElement => {
     const { bannerLiveGameId } = useBannerLiveGame();
-
-
-    // Ui context hook
-    const ui = useUi().ui;
 
     // Global state to determine if the current user is authenticated
     const isAuthenticated = useAppSelector((state) => state.user.auth.isAuthenticated);

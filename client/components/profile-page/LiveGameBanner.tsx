@@ -1,6 +1,4 @@
 "use client"
-import { LiveGameForBanner } from "@shared/index";
-import { Button } from "../ui/button";
 import { MoveRight, Zap } from "lucide-react";
 import Link from "next/link";
 

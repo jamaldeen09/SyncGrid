@@ -63,7 +63,7 @@ export const selects: {
     },
   ];
 
-  
+
 // Winning combinations 
 export const winningCombinations = [
   [0, 1, 2], // Top horizontal row

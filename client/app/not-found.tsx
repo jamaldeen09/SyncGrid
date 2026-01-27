@@ -54,5 +54,5 @@ const NotFoundPage = (): React.ReactElement => {
         </div>
     );
 };
-
+ 
 export default NotFoundPage;
