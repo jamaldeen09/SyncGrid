@@ -1,4 +1,4 @@
-import { IGame } from './../models/Game';
+import { IGame } from './../models/Game.js';
 import mongoose from "mongoose";
 
 export type BulkGamesLean = {

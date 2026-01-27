@@ -1,4 +1,4 @@
-import { IGame } from './../models/Game';
+import { IGame } from './../models/Game.js';
 import { ValidationError } from "express-validator";
 import { Request, Response } from "express";
 import { AccessTokenPayload, RefreshTokenPayload } from "./auth.types";

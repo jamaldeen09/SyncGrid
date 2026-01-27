@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import { SocketService } from "../services/socket.service.js";
 import { events } from "../lib/events.js";
 import { MatchmakingService } from "../services/matchmaking.service.js";
-import { LiveGame, NewMoveArgs } from "@shared/index.js";
+import { NewMoveArgs } from "@shared/index.js";
 import { GamePlayService } from "src/services/game-play.service.js";
 import jwt from "jsonwebtoken"
 import { envData } from "./env.config.js";
@@ -137,14 +137,13 @@ export const initSocket = (io: Server) => {
             (args, callback) => gamePlayService.getBannerLiveGame(args, callback)
         )
 
-        // Listens for status updates for instantaneoud ui update
+        // Listens for status updates for instantaneous ui update
         socketService.newListener<{
             status: "won" | "lost" | "draw" | "canceled";
             gameId: string;
         }>(events.statusUpdate,
             (args) => gamePlayService.statusUpdateForOpponent(args, socketService)
         )
-
     });
 }
 

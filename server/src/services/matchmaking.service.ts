@@ -1,4 +1,4 @@
-import { Server, Socket } from "socket.io";
+import { Socket } from "socket.io";
 import { redisService } from "./redis.service.js";
 import { SocketService } from "./socket.service.js";
 import { ListenerCallback, LiveGame } from "@shared/index";
@@ -80,8 +80,6 @@ export class MatchmakingService {
                     const grabbedUserId = await redisService.matchmakingQueueOperation(findingOpponentQueueKey, "grab-last") as string
                     const grabbedUserSocketId = await redisService.readOperation(`user-socket:${grabbedUserId}`);
 
-                    console.log("GRABBED USER SOCKET ID:", grabbedUserSocketId);
-
                     // ** ATOMIC CHECK: Is the current user (userId) still searching?
                     // This critical check helps prevent race conditions when a user "cancels"
                     // the search. If the current socket/the grabbed user from the queue 
@@ -89,7 +87,7 @@ export class MatchmakingService {
                     // the key: "searching:[userId]"
                     const [isRequesterStillHere, isGrabbedStillHere] = await Promise.all([
                         redisService.readOperation(`searching:${userId}`),
-                        redisService.readOperation(`searching:${grabbedUserId}`)
+                        redisService.readOperation(`searching:${grabbedUserId}`),
                     ]);
 
                     // If none of them are "searching" again then that means they clicked "cancel"
@@ -118,8 +116,6 @@ export class MatchmakingService {
                     // recursion which simply just checks for another user and ignores this 
                     // user with the ghost socket id
                     if (!grabbedUserSocketId) {
-                        // ** RECURSION: Try to find the next available person 
-                        console.log(`Ghost user ${grabbedUserId} found. Popping next...`);
                         continue;
                     };
 
@@ -139,8 +135,6 @@ export class MatchmakingService {
 
                     // The created game's id converted to a string (because it was initially an ObjectId)
                     const gameId: string = newGame._id.toString();
-
-                    console.log("ALL CONDITIONS PASSED CREATED GAME: ", newGame);
 
                     // This is the live game that gets updated each time something happens
                     // e.g a new move, a winner etc.. It's faster than making http requests
@@ -173,6 +167,8 @@ export class MatchmakingService {
                     await Promise.all([
                         redisService.deleteOperation(`searching:${userId}`),
                         redisService.deleteOperation(`searching:${grabbedUserId}`),
+                        redisService.deleteOperation(`user-socket:${grabbedUserId}`),
+                        redisService.deleteOperation(`user-socket:${userId}`),
                     ]);
 
                     // This emits the game id to the frontend

@@ -1,7 +1,5 @@
 import mongoose, { Model, Document, AnyKeys, AnyObject } from "mongoose";
 import { DbQuery, MongoCrud, Query } from "../types/db-service.types.js";
-import { GetGamesData } from "@shared/index.js";
-
 
 export class DatabaseService {
     // ===== Get bulk or single document ===== \\
@@ -29,8 +27,6 @@ export class DatabaseService {
             
                 // Secondary sort for stability
                 sortDefinition._id = direction;
-            
-                console.log("APPLYING SORT:", sortDefinition); // VERIFY THIS LOGS { finishedAt: -1, _id: -1 }
             
                 // Re-assign to ensure the chain is preserved
                 bulkQuery.sort(sortDefinition);

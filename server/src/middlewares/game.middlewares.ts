@@ -5,8 +5,6 @@ import { ConfiguredRequest, ConfiguredResponse } from '../types/api.types.js';
 import { ExistsQueryLean } from '../types/db-service.types.js';
 import { IGame } from '../models/Game.js';
 
-
-
 export const checkForInQueueGameMiddleware = async (req: Request, res: ConfiguredResponse, next: NextFunction) => {
     const { userId } = (req as ConfiguredRequest).accessTokenPayload;
 

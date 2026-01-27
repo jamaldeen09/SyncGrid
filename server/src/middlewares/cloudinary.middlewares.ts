@@ -27,7 +27,6 @@ export const parseFormData = (req: Request, res: Response, next: NextFunction) =
 };
 
 
-
 // ===== Profile picture upload ===== \\
 export const profilePictureUpload = async (req: Request, res: Response, next: NextFunction) => {
     if (!req.file) return next();

@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express"
+import express from "express"
 import { loginValidation, signupValidation } from "../lib/validations/auth.validations.js";
 import { 
     checkUsernameAvailabilityMiddleware, 
@@ -6,7 +6,6 @@ import {
     verifyAccessTokenMiddleware, 
     verifyRefreshTokenMiddleware 
 } from "../middlewares/auth.middlewares.js";
-import { User } from "../models/User.js";
 import { 
     getSessionController, 
     loginController, 
@@ -56,19 +55,3 @@ authRouter.post(
     verifyAccessTokenMiddleware,
     logoutController
 );
-
-
-// ===== Quick actions routes ===== \\
-authRouter.get(
-    "/users",
-    async (req: Request, res: Response) => {
-        return res.json(await User.find())
-    }
-)
-
-authRouter.delete(
-    "/users",
-    async (req: Request, res: Response) => {
-        return res.json(await User.deleteMany());
-    }
-)
