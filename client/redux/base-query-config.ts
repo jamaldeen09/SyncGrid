@@ -6,7 +6,7 @@ import { callToast } from "@/providers/SonnerProvider";
 
 // ===== Base query ===== \\
 export const baseQuery = fetchBaseQuery({
-    baseUrl: "http://localhost:4080/api/v1",
+    baseUrl: process.env.NEXT_PUBLIC_BACKEND_URL,
     prepareHeaders: (headers) => {
         // ===== Extract tokens from local storage ===== \\
         const accessToken = localStorage.getItem("accessToken");
