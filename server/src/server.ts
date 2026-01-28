@@ -69,7 +69,7 @@ app.use("/api/v1", profileRouter);
 
 // Game
 app.use("/games/:userId", dataLimiter);
-app.use("/api/v1", gameRouter);
+app.use("/api/v1", gameRouter)
 
 
 // Listens for a port (if redis and database are connected)
