@@ -1,4 +1,4 @@
-import { initRedis, redisClient } from './config/redis.config.js';
+import { createApiLimiter, initRedis, redisClient } from './config/redis.config.js';
 import { initDb } from './config/database.config.js';
 import { envData } from './config/env.config.js';
 import express, { Application } from "express"
@@ -51,8 +51,24 @@ await initRedis();
 mountGameJanitor(io);
     
 // Routes 
+
+// Limiters
+const authLimiter = createApiLimiter(15 * 60 * 1000, 10);
+const profileLimiter = createApiLimiter(60 * 60 * 1000, 15)
+const dataLimiter = createApiLimiter(5 * 60 * 1000, 100);
+
+// Auth
+app.use(`/api/v1/auth/signup`, authLimiter);
+app.use(`/api/v1/auth/login`, authLimiter);
 app.use("/api/v1/auth", authRouter);
+
+// Profile
+app.use(`/api/v1/profile`, profileLimiter);
+app.use("api/v1/profile/public/:username", profileLimiter)
 app.use("/api/v1", profileRouter);
+
+// Game
+app.use("/games/:userId", dataLimiter);
 app.use("/api/v1", gameRouter);
 
 
